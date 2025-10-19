@@ -32,8 +32,11 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
   const handleGoogleSignIn = async () => {
     try {
       const provider = new GoogleAuthProvider();
-      // Remove Google Drive scopes - Firebase Auth doesn't support custom scopes
-      // This was causing the redirect_uri_mismatch error
+      // Add Google Drive and Docs scopes for API access
+      provider.addScope('https://www.googleapis.com/auth/drive');
+      provider.addScope('https://www.googleapis.com/auth/documents');
+      provider.addScope('https://www.googleapis.com/auth/drive.readonly');
+      provider.addScope('https://www.googleapis.com/auth/documents.readonly');
       
       const result = await signInWithPopup(auth, provider);
       setUser(result.user);
@@ -109,7 +112,9 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
         setNeedsOAuth(false);
       } else {
         console.error('Error loading files:', data.error);
-        setNeedsOAuth(true);
+        if (data.error?.includes('OAuth tokens not found') || data.needsAuth) {
+          setNeedsOAuth(true);
+        }
         setFiles([]);
       }
     } catch (error) {
@@ -192,6 +197,11 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
         >
           {loading ? 'Loading...' : 'Refresh Files'}
         </button>
+        {needsOAuth && (
+          <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-sm">
+            <p className="text-yellow-800">Please sign out and sign in again to authorize Google Drive access.</p>
+          </div>
+        )}
       </div>
 
       {/* File list */}
