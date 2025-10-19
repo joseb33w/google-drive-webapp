@@ -68,10 +68,6 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
           operation: 'get_document',
           params: {
             documentId: file.id
-          },
-          userTokens: {
-            // Session ID for Railway MCP server
-            sessionId: 'default'
           }
         })
       });
@@ -129,10 +125,6 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
             documentId: file.id,
             findText: '', // This would need to be the current content
             replaceWithText: convertHTMLToPlainText(documentContent)
-          },
-          userTokens: {
-            // Session ID for Railway MCP server
-            sessionId: 'default'
           }
         })
       });

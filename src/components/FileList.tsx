@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, functions } from '@/lib/firebase';
 import Image from 'next/image';
+import { httpsCallable } from 'firebase/functions';
 
 interface File {
   id: string;
@@ -27,23 +28,37 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
   const [user, setUser] = useState<{displayName: string | null; email: string | null; photoURL: string | null; getIdToken: () => Promise<string>} | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
-  // Handle Google Sign-In
+  // Handle Google Sign-In with Google Drive scopes
   const handleGoogleSignIn = async () => {
     try {
       const provider = new GoogleAuthProvider();
-      provider.addScope('https://www.googleapis.com/auth/drive');
-      provider.addScope('https://www.googleapis.com/auth/documents');
+      // Remove Google Drive scopes - Firebase Auth doesn't support custom scopes
+      // This was causing the redirect_uri_mismatch error
       
       const result = await signInWithPopup(auth, provider);
       setUser(result.user);
       
-      // Get the session ID from the URL or create one
-      const urlParams = new URLSearchParams(window.location.search);
-      const session = urlParams.get('session') || Math.random().toString(36).substring(2, 15);
-      setSessionId(session);
+      // Extract OAuth tokens from Google credential
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (credential?.accessToken) {
+        // Store OAuth tokens in Firestore via Firebase Functions
+        const storeTokens = httpsCallable(functions, 'storeOAuthTokens');
+        
+        try {
+          await storeTokens({
+            oauthAccessToken: credential.accessToken,
+            oauthRefreshToken: null, // Firebase Auth doesn't provide refresh token directly
+            oauthExpiry: Date.now() + (3600 * 1000) // 1 hour default
+          });
+          console.log('OAuth tokens stored successfully');
+        } catch (error) {
+          console.error('Failed to store OAuth tokens:', error);
+        }
+      }
       
-      // Store the session ID for API calls
-      localStorage.setItem('sessionId', session);
+      // Clear any existing session ID since we're using Firebase Auth now
+      setSessionId(null);
+      localStorage.removeItem('sessionId');
       
     } catch (error) {
       console.error('Sign-in error:', error);
@@ -63,7 +78,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
     }
   };
 
-  // Load files from Google Drive via Firebase Functions (which proxies to Railway MCP server)
+  // Load files from Google Drive via Firebase Functions
   const loadFiles = useCallback(async () => {
     if (!user) return;
     
@@ -72,7 +87,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
       // Get user's Firebase ID token for authentication with Firebase Functions
       const idToken = await user.getIdToken();
       
-      // Call Firebase Functions which will proxy to Railway MCP server
+      // Call Firebase Functions directly (no more Railway proxy)
       const response = await fetch('https://us-south1-try-mcp-15e08.cloudfunctions.net/googleDriveOperations', {
         method: 'POST',
         headers: {
@@ -83,10 +98,6 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
           operation: 'list_files',
           params: {
             maxResults: 50
-          },
-          userTokens: {
-            // Session ID for Railway MCP server
-            sessionId: sessionId || 'default'
           }
         })
       });
@@ -108,28 +119,9 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
     } finally {
       setLoading(false);
     }
-  }, [user, sessionId]); // Updated dependency array
+  }, [user]); // Removed sessionId dependency
 
-  // Handle Google OAuth for Drive access via Railway MCP server
-  const handleGoogleOAuth = async () => {
-    try {
-      // Redirect to Railway MCP server OAuth endpoint
-      const railwayOAuthUrl = 'https://google-mcp-tools-access-production.up.railway.app/auth/google';
-      window.open(railwayOAuthUrl, 'google-oauth', 'width=500,height=600');
-      
-      // For now, we'll show a message to manually copy the session ID
-      alert('After completing OAuth, copy the session ID from the URL and paste it here');
-      const sessionId = prompt('Enter the session ID from the OAuth callback URL:');
-      if (sessionId) {
-        setSessionId(sessionId);
-        localStorage.setItem('sessionId', sessionId);
-        // Reload files with the new session ID
-        loadFiles();
-      }
-    } catch (error) {
-      console.error('OAuth error:', error);
-    }
-  };
+  // No longer needed - Firebase Auth handles Google Drive access
 
 
   // Listen for auth state changes
@@ -193,27 +185,13 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
             Sign out
           </button>
         </div>
-        {needsOAuth ? (
-          <div className="mt-2 space-y-2">
-            <p className="text-xs text-gray-600">
-              Authorize Google Drive access to view your files.
-            </p>
-            <button
-              onClick={handleGoogleOAuth}
-              className="w-full bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
-            >
-              Authorize Google Drive
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={loadFiles}
-            disabled={loading}
-            className="w-full mt-2 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 disabled:opacity-50"
-          >
-            {loading ? 'Loading...' : 'Refresh Files'}
-          </button>
-        )}
+        <button
+          onClick={loadFiles}
+          disabled={loading}
+          className="w-full mt-2 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 disabled:opacity-50"
+        >
+          {loading ? 'Loading...' : 'Refresh Files'}
+        </button>
       </div>
 
       {/* File list */}

@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { getFunctions } from 'firebase/functions';
 
 // Firebase configuration - your actual values from Firebase Console
 const firebaseConfig = {
@@ -19,5 +20,6 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firebase services
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+export const functions = getFunctions(app, 'us-south1'); // Specify region
 
 export default app;

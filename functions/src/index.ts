@@ -3,6 +3,7 @@ import * as admin from 'firebase-admin';
 import OpenAI from 'openai';
 import axios from 'axios';
 import { onCall, onRequest } from 'firebase-functions/v2/https';
+import { google } from 'googleapis';
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -270,7 +271,45 @@ export const railwayProxyHttp = onRequest({
   }
 });
 
-// Google Drive operations - proxy to Railway MCP server
+// Helper function to get OAuth client with user tokens
+async function getOAuthClient(uid: string) {
+  // Get user's OAuth tokens from Firestore
+  const db = admin.firestore();
+  const userDoc = await db.collection('userTokens').doc(uid).get();
+  
+  if (!userDoc.exists) {
+    throw new Error('User OAuth tokens not found. Please sign in with Google again.');
+  }
+  
+  const tokens = userDoc.data();
+  
+  // Create OAuth2 client
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    'https://google-drive-webapp-9xjr.vercel.app'
+  );
+  
+  oauth2Client.setCredentials({
+    access_token: tokens?.access_token,
+    refresh_token: tokens?.refresh_token,
+    expiry_date: tokens?.expiry_date
+  });
+  
+  // Set up automatic token refresh
+  oauth2Client.on('tokens', async (newTokens) => {
+    console.log('Refreshing tokens for user:', uid);
+    await db.collection('userTokens').doc(uid).update({
+      access_token: newTokens.access_token,
+      expiry_date: newTokens.expiry_date,
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+  });
+  
+  return oauth2Client;
+}
+
+// Google Drive operations - direct integration with Firebase Auth
 export const googleDriveOperations = onRequest({ 
   region: 'us-south1',
   timeoutSeconds: 300,
@@ -293,128 +332,178 @@ export const googleDriveOperations = onRequest({
   }
 
   try {
-    const { operation, params, userTokens } = req.body;
+    const { operation, params } = req.body;
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Authorization header required' });
+      return;
+    }
 
-    // Map frontend operations to Railway MCP server operations
-    let mcpMethod = '';
-    let mcpParams = {};
+    const idToken = authHeader.split('Bearer ')[1];
+    
+    // Verify the Firebase ID token
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const uid = decodedToken.uid;
+    console.log('Authenticated user:', uid);
 
+    // Get OAuth client with user's tokens
+    const oauth2Client = await getOAuthClient(uid);
+    
+    // Initialize Google APIs
+    const drive = google.drive({ version: 'v3', auth: oauth2Client });
+    const docs = google.docs({ version: 'v1', auth: oauth2Client });
+
+    let result;
     switch (operation) {
-      case 'list_files':
-        mcpMethod = 'tools/call';
-        mcpParams = {
-          name: 'drive_list_files',
-          arguments: {
-            maxResults: params?.maxResults || 50,
-            mimeType: 'application/vnd.google-apps.document'
-          }
+      case 'list_files': {
+        // List Google Docs files
+        const response = await drive.files.list({
+          q: "mimeType='application/vnd.google-apps.document' and trashed=false",
+          spaces: 'drive',
+          fields: 'files(id, name, mimeType, createdTime, modifiedTime, webViewLink)',
+          pageSize: params?.maxResults || 50,
+          orderBy: 'modifiedTime desc'
+        });
+        
+        result = {
+          files: response.data.files?.map((file: any) => ({
+            id: file.id,
+            name: file.name,
+            mimeType: file.mimeType,
+            createdTime: file.createdTime,
+            modifiedTime: file.modifiedTime,
+            webViewLink: file.webViewLink,
+            isGoogleDoc: file.mimeType === 'application/vnd.google-apps.document'
+          })) || []
         };
         break;
+      }
 
-      case 'get_document':
-        mcpMethod = 'tools/call';
-        mcpParams = {
-          name: 'docs_get_document',
-          arguments: {
-            documentId: params.documentId
+      case 'get_document': {
+        // Get document content
+        const response = await docs.documents.get({
+          documentId: params.documentId
+        });
+        
+        // Extract text content from document
+        const content = response.data.body?.content?.map((item: any) => {
+          if (item.paragraph) {
+            const text = item.paragraph.elements?.map((el: any) => 
+              el.textRun?.content || ''
+            ).join('') || '';
+            return { type: 'paragraph', text: text.trim() };
           }
+          return { type: 'other', text: '' };
+        }).filter((item: any) => item.text) || [];
+        
+        result = {
+          documentId: response.data.documentId,
+          title: response.data.title,
+          content
         };
         break;
+      }
 
-      case 'replace_text':
-        mcpMethod = 'tools/call';
-        mcpParams = {
-          name: 'docs_replace_text',
-          arguments: {
-            documentId: params.documentId,
-            findText: params.findText,
-            replaceWithText: params.replaceWithText
+      case 'replace_text': {
+        // Replace text in document
+        const requests = [{
+          replaceAllText: {
+            replaceText: params.replaceWithText,
+            containsText: {
+              text: params.findText || '',
+              matchCase: false
+            }
           }
+        }];
+        
+        await docs.documents.batchUpdate({
+          documentId: params.documentId,
+          requestBody: { requests }
+        });
+        
+        result = { 
+          documentId: params.documentId, 
+          message: 'Text replaced successfully' 
         };
         break;
+      }
 
-      case 'create_document':
-        mcpMethod = 'tools/call';
-        mcpParams = {
-          name: 'docs_create_document',
-          arguments: {
+      case 'create_document': {
+        // Create new document
+        const response = await docs.documents.create({
+          requestBody: {
             title: params.title
           }
+        });
+        
+        result = {
+          documentId: response.data.documentId,
+          title: response.data.title,
+          url: `https://docs.google.com/document/d/${response.data.documentId}/edit`
         };
         break;
+      }
 
       default:
         res.status(400).json({ error: 'Unknown operation' });
         return;
     }
 
-    // Proxy request to Railway MCP server
-    const response = await axios.post(`${RAILWAY_API_URL}/mcp`, {
-      jsonrpc: '2.0',
-      id: 1,
-      method: mcpMethod,
-      params: mcpParams
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'x-session-id': userTokens?.sessionId || 'default'
-      }
-    });
+    res.json({ result });
 
-    // Extract result from MCP response
-    const mcpResult = response.data.result;
-    if (mcpResult && mcpResult.content && mcpResult.content[0]) {
-      const result = JSON.parse(mcpResult.content[0].text);
-      res.json({ result });
-    } else {
-      res.status(500).json({ error: 'Invalid response from MCP server' });
-    }
-
-  } catch (error) {
+  } catch (error: any) {
     console.error('Google Drive operations error:', error);
-    res.status(500).json({ error: 'Failed to perform Google Drive operation' });
+    
+    // Check if it's an OAuth error
+    if (error.message?.includes('OAuth tokens not found')) {
+      res.status(401).json({ 
+        error: 'OAuth tokens not found',
+        needsAuth: true,
+        message: 'Please sign in with Google again to authorize Drive access'
+      });
+    } else {
+      res.status(500).json({ 
+        error: 'Failed to perform Google Drive operation',
+        details: error.message 
+      });
+    }
   }
 });
 
-// Google OAuth authorization endpoint - proxy to Railway MCP server
-export const googleOAuth = onRequest({ 
+// Store OAuth tokens when user signs in with Google
+export const storeOAuthTokens = onCall({ 
   region: 'us-south1',
-  timeoutSeconds: 300,
+  timeoutSeconds: 60,
   memory: '256MiB'
-}, async (req, res) => {
-  // Set CORS headers
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+}, async (request) => {
+  // Verify user is authenticated
+  if (!request.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+  }
 
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.status(204).send('');
-    return;
+  const { oauthAccessToken, oauthRefreshToken, oauthExpiry } = request.data;
+  const uid = request.auth.uid;
+
+  if (!oauthAccessToken) {
+    throw new functions.https.HttpsError('invalid-argument', 'OAuth access token is required');
   }
 
   try {
-    if (req.method === 'GET') {
-      // Get OAuth URL from Railway MCP server
-      const response = await axios.get(`${RAILWAY_API_URL}/auth/google`);
-      res.json({ authUrl: response.data.authUrl || `${RAILWAY_API_URL}/auth/google` });
-    } else if (req.method === 'POST') {
-      // Exchange authorization code for tokens via Railway MCP server
-      const { code } = req.body;
-      
-      if (!code) {
-        res.status(400).json({ error: 'Authorization code required' });
-        return;
-      }
+    const db = admin.firestore();
+    await db.collection('userTokens').doc(uid).set({
+      access_token: oauthAccessToken,
+      refresh_token: oauthRefreshToken || null,
+      expiry_date: oauthExpiry || Date.now() + (3600 * 1000), // Default 1 hour
+      created_at: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    });
 
-      const response = await axios.post(`${RAILWAY_API_URL}/auth/callback`, { code });
-      res.json({ tokens: response.data.tokens });
-    } else {
-      res.status(405).json({ error: 'Method not allowed' });
-    }
+    console.log('Stored OAuth tokens for user:', uid);
+    return { success: true };
   } catch (error) {
-    console.error('Google OAuth error:', error);
-    res.status(500).json({ error: 'OAuth flow failed' });
+    console.error('Error storing OAuth tokens:', error);
+    throw new functions.https.HttpsError('internal', 'Failed to store OAuth tokens');
   }
 });
 
