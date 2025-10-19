@@ -3,17 +3,12 @@ import * as admin from 'firebase-admin';
 import OpenAI from 'openai';
 import axios from 'axios';
 import { onCall, onRequest } from 'firebase-functions/v2/https';
-import { google } from 'googleapis';
 
 // Initialize Firebase Admin
 admin.initializeApp();
 
 // Railway API URL - using environment variables
 const RAILWAY_API_URL = process.env.RAILWAY_API_URL || 'https://google-mcp-tools-access-production.up.railway.app';
-
-// Google OAuth credentials - using environment variables
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
 // Secure chat endpoint
 export const chat = onCall({ 
@@ -146,6 +141,17 @@ export const chatHttp = onRequest({
   timeoutSeconds: 300,
   memory: '512MiB'
 }, async (req, res) => {
+  // Set CORS headers
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
   // Initialize OpenAI with environment variable
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -226,6 +232,17 @@ export const railwayProxyHttp = onRequest({
   timeoutSeconds: 300,
   memory: '256MiB'
 }, async (req, res) => {
+  // Set CORS headers
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
@@ -253,12 +270,23 @@ export const railwayProxyHttp = onRequest({
   }
 });
 
-// Google Drive operations - direct integration (bypasses Railway backend)
+// Google Drive operations - proxy to Railway MCP server
 export const googleDriveOperations = onRequest({ 
   region: 'us-south1',
   timeoutSeconds: 300,
   memory: '512MiB'
 }, async (req, res) => {
+  // Set CORS headers
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
@@ -267,79 +295,51 @@ export const googleDriveOperations = onRequest({
   try {
     const { operation, params, userTokens } = req.body;
 
-    if (!userTokens) {
-      res.status(400).json({ error: 'User tokens required' });
-      return;
-    }
-
-    // Initialize Google APIs with user tokens
-    const oauth2Client = new google.auth.OAuth2(
-      GOOGLE_CLIENT_ID,
-      GOOGLE_CLIENT_SECRET,
-      'postmessage' // For server-to-server communication
-    );
-    
-    oauth2Client.setCredentials(userTokens);
-    
-    const drive = google.drive({ version: 'v3', auth: oauth2Client });
-    const docs = google.docs({ version: 'v1', auth: oauth2Client });
-
-    let result;
+    // Map frontend operations to Railway MCP server operations
+    let mcpMethod = '';
+    let mcpParams = {};
 
     switch (operation) {
       case 'list_files':
-        const filesResponse = await drive.files.list({
-          q: "mimeType='application/vnd.google-apps.document'",
-          spaces: 'drive',
-          fields: 'files(id, name, createdTime, modifiedTime)',
-          pageSize: params?.maxResults || 50,
-        });
-        result = {
-          totalFiles: filesResponse.data.files?.length || 0,
-          files: filesResponse.data.files?.map((file: any) => ({
-            id: file.id,
-            name: file.name,
-            createdTime: file.createdTime,
-            modifiedTime: file.modifiedTime,
-            url: `https://docs.google.com/document/d/${file.id}/edit`,
-          })) || [],
+        mcpMethod = 'tools/call';
+        mcpParams = {
+          name: 'drive_list_files',
+          arguments: {
+            maxResults: params?.maxResults || 50,
+            mimeType: 'application/vnd.google-apps.document'
+          }
         };
         break;
 
       case 'get_document':
-        const docResponse = await docs.documents.get({ documentId: params.documentId });
-        result = {
-          documentId: docResponse.data.documentId,
-          title: docResponse.data.title,
-          content: docResponse.data.body?.content?.map((item: any) => ({
-            type: item.paragraph ? 'paragraph' : 'other',
-            text: item.paragraph?.elements?.map((el: any) => el.textRun?.content || '').join('') || '',
-          })),
+        mcpMethod = 'tools/call';
+        mcpParams = {
+          name: 'docs_get_document',
+          arguments: {
+            documentId: params.documentId
+          }
         };
         break;
 
       case 'replace_text':
-        const requests = [{
-          replaceAllText: {
-            replaceText: params.replaceWithText,
-            containsText: { text: params.findText, matchCase: false },
-          },
-        }];
-        await docs.documents.batchUpdate({
-          documentId: params.documentId,
-          requestBody: { requests },
-        });
-        result = { documentId: params.documentId, message: 'Text replaced successfully' };
+        mcpMethod = 'tools/call';
+        mcpParams = {
+          name: 'docs_replace_text',
+          arguments: {
+            documentId: params.documentId,
+            findText: params.findText,
+            replaceWithText: params.replaceWithText
+          }
+        };
         break;
 
       case 'create_document':
-        const createResponse = await docs.documents.create({
-          requestBody: { title: params.title },
-        });
-        result = {
-          documentId: createResponse.data.documentId,
-          title: createResponse.data.title,
-          url: `https://docs.google.com/document/d/${createResponse.data.documentId}/edit`,
+        mcpMethod = 'tools/call';
+        mcpParams = {
+          name: 'docs_create_document',
+          arguments: {
+            title: params.title
+          }
         };
         break;
 
@@ -348,10 +348,73 @@ export const googleDriveOperations = onRequest({
         return;
     }
 
-    res.json({ result });
+    // Proxy request to Railway MCP server
+    const response = await axios.post(`${RAILWAY_API_URL}/mcp`, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: mcpMethod,
+      params: mcpParams
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'x-session-id': userTokens?.sessionId || 'default'
+      }
+    });
+
+    // Extract result from MCP response
+    const mcpResult = response.data.result;
+    if (mcpResult && mcpResult.content && mcpResult.content[0]) {
+      const result = JSON.parse(mcpResult.content[0].text);
+      res.json({ result });
+    } else {
+      res.status(500).json({ error: 'Invalid response from MCP server' });
+    }
+
   } catch (error) {
     console.error('Google Drive operations error:', error);
     res.status(500).json({ error: 'Failed to perform Google Drive operation' });
+  }
+});
+
+// Google OAuth authorization endpoint - proxy to Railway MCP server
+export const googleOAuth = onRequest({ 
+  region: 'us-south1',
+  timeoutSeconds: 300,
+  memory: '256MiB'
+}, async (req, res) => {
+  // Set CORS headers
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  try {
+    if (req.method === 'GET') {
+      // Get OAuth URL from Railway MCP server
+      const response = await axios.get(`${RAILWAY_API_URL}/auth/google`);
+      res.json({ authUrl: response.data.authUrl || `${RAILWAY_API_URL}/auth/google` });
+    } else if (req.method === 'POST') {
+      // Exchange authorization code for tokens via Railway MCP server
+      const { code } = req.body;
+      
+      if (!code) {
+        res.status(400).json({ error: 'Authorization code required' });
+        return;
+      }
+
+      const response = await axios.post(`${RAILWAY_API_URL}/auth/callback`, { code });
+      res.json({ tokens: response.data.tokens });
+    } else {
+      res.status(405).json({ error: 'Method not allowed' });
+    }
+  } catch (error) {
+    console.error('Google OAuth error:', error);
+    res.status(500).json({ error: 'OAuth flow failed' });
   }
 });
 
