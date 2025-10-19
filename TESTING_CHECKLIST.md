@@ -11,7 +11,7 @@
 Set these in Vercel Dashboard → Project Settings → Environment Variables:
 
 ```bash
-NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyAxYh5DqiWjgt1q-1-zeHd568YBb9kIZjI
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key_here
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=try-mcp-15e08.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=try-mcp-15e08
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=try-mcp-15e08.firebasestorage.app
