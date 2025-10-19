@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
 
 interface File {
   id: string;
@@ -24,6 +26,7 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
   const [documentContent, setDocumentContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -48,16 +51,18 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
   }, [documentContent, editor]);
 
   const loadDocumentContent = useCallback(async () => {
-    if (!file?.id) return;
+    if (!file?.id || !user) return;
 
     setLoading(true);
     try {
-      // For now, we'll use a placeholder approach
-      // In a real implementation, you'd get the user's Google tokens
+      // Get the user's ID token for authentication
+      const idToken = await user.getIdToken();
+      
       const response = await fetch('https://us-south1-try-mcp-15e08.cloudfunctions.net/googleDriveOperations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
         },
         body: JSON.stringify({
           operation: 'get_document',
@@ -65,9 +70,8 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
             documentId: file.id
           },
           userTokens: {
-            // Placeholder - in real implementation, get from user's OAuth flow
-            access_token: 'placeholder',
-            refresh_token: 'placeholder'
+            // Session ID for Railway MCP server
+            sessionId: 'default'
           }
         })
       });
@@ -83,7 +87,15 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
     } finally {
       setLoading(false);
     }
-  }, [file?.id]);
+  }, [file?.id, user]);
+
+  // Listen for auth state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Load document content when file changes
   useEffect(() => {
@@ -96,16 +108,20 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
   }, [file, editor?.commands, loadDocumentContent]);
 
   const saveDocument = async () => {
-    if (!file?.id || !documentContent) return;
+    if (!file?.id || !documentContent || !user) return;
 
     setSaving(true);
     try {
+      // Get the user's ID token for authentication
+      const idToken = await user.getIdToken();
+      
       // For now, we'll use replace_text to update the entire document
       // In a real implementation, you'd want to track changes and update incrementally
       const response = await fetch('https://us-south1-try-mcp-15e08.cloudfunctions.net/googleDriveOperations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
         },
         body: JSON.stringify({
           operation: 'replace_text',
@@ -115,9 +131,8 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
             replaceWithText: convertHTMLToPlainText(documentContent)
           },
           userTokens: {
-            // Placeholder - in real implementation, get from user's OAuth flow
-            access_token: 'placeholder',
-            refresh_token: 'placeholder'
+            // Session ID for Railway MCP server
+            sessionId: 'default'
           }
         })
       });

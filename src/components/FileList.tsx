@@ -23,6 +23,7 @@ interface FileListProps {
 export default function FileList({ onFileSelect, selectedFile }: FileListProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
+  const [needsOAuth, setNeedsOAuth] = useState(false);
   const [user, setUser] = useState<{displayName: string | null; email: string | null; photoURL: string | null; getIdToken: () => Promise<string>} | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
@@ -62,20 +63,21 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
     }
   };
 
-  // Load files from Google Drive via Firebase Functions
+  // Load files from Google Drive via Firebase Functions (which proxies to Railway MCP server)
   const loadFiles = useCallback(async () => {
     if (!user) return;
     
     setLoading(true);
     try {
-      // Get user's Google tokens from Firebase Auth
-      const token = await user.getIdToken();
+      // Get user's Firebase ID token for authentication with Firebase Functions
+      const idToken = await user.getIdToken();
       
+      // Call Firebase Functions which will proxy to Railway MCP server
       const response = await fetch('https://us-south1-try-mcp-15e08.cloudfunctions.net/googleDriveOperations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${idToken}`, // Authenticate Firebase Function call
         },
         body: JSON.stringify({
           operation: 'list_files',
@@ -83,24 +85,52 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
             maxResults: 50
           },
           userTokens: {
-            // We'll need to get these from the user's OAuth flow
-            // For now, we'll use a placeholder approach
-            access_token: 'placeholder',
-            refresh_token: 'placeholder'
+            // Session ID for Railway MCP server
+            sessionId: sessionId || 'default'
           }
         })
       });
 
       const data = await response.json();
+      
       if (data.result) {
         setFiles(data.result.files || []);
+        setNeedsOAuth(false);
+      } else {
+        console.error('Error loading files:', data.error);
+        setNeedsOAuth(true);
+        setFiles([]);
       }
     } catch (error) {
       console.error('Error loading files:', error);
+      setNeedsOAuth(true);
+      setFiles([]);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, sessionId]); // Updated dependency array
+
+  // Handle Google OAuth for Drive access via Railway MCP server
+  const handleGoogleOAuth = async () => {
+    try {
+      // Redirect to Railway MCP server OAuth endpoint
+      const railwayOAuthUrl = 'https://google-mcp-tools-access-production.up.railway.app/auth/google';
+      window.open(railwayOAuthUrl, 'google-oauth', 'width=500,height=600');
+      
+      // For now, we'll show a message to manually copy the session ID
+      alert('After completing OAuth, copy the session ID from the URL and paste it here');
+      const sessionId = prompt('Enter the session ID from the OAuth callback URL:');
+      if (sessionId) {
+        setSessionId(sessionId);
+        localStorage.setItem('sessionId', sessionId);
+        // Reload files with the new session ID
+        loadFiles();
+      }
+    } catch (error) {
+      console.error('OAuth error:', error);
+    }
+  };
+
 
   // Listen for auth state changes
   useEffect(() => {
@@ -163,13 +193,27 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
             Sign out
           </button>
         </div>
-        <button
-          onClick={loadFiles}
-          disabled={loading}
-          className="w-full mt-2 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 disabled:opacity-50"
-        >
-          {loading ? 'Loading...' : 'Refresh Files'}
-        </button>
+        {needsOAuth ? (
+          <div className="mt-2 space-y-2">
+            <p className="text-xs text-gray-600">
+              Authorize Google Drive access to view your files.
+            </p>
+            <button
+              onClick={handleGoogleOAuth}
+              className="w-full bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+            >
+              Authorize Google Drive
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={loadFiles}
+            disabled={loading}
+            className="w-full mt-2 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 disabled:opacity-50"
+          >
+            {loading ? 'Loading...' : 'Refresh Files'}
+          </button>
+        )}
       </div>
 
       {/* File list */}
