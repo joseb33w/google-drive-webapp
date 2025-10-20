@@ -1,6 +1,6 @@
 'use client';
 
-// Main page component for Google Drive web app - Environment variables fixed
+// Main page component for Google Drive web app - Deploying again
 import { useState } from 'react';
 import FileList from '@/components/FileList';
 import DocumentEditor from '@/components/DocumentEditor';
