@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import FileList from '@/components/FileList';
 import DocumentEditor from '@/components/DocumentEditor';
 import ChatPanel from '@/components/ChatPanel';
