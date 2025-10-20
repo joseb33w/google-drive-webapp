@@ -33,7 +33,7 @@ export default function Home() {
         <div className="p-4 border-b border-gray-200 flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-800">Google Drive Files</h2>
         </div>
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0">
           <FileList 
             onFileSelect={setSelectedFile}
             selectedFile={selectedFile}
@@ -48,7 +48,7 @@ export default function Home() {
             {selectedFile ? selectedFile.name : 'Select a document to edit'}
           </h2>
         </div>
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0">
           <DocumentEditor 
             file={selectedFile}
             onContentChange={(content) => {
@@ -64,7 +64,7 @@ export default function Home() {
         <div className="p-4 border-b border-gray-200 flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-800">AI Assistant</h2>
         </div>
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0">
           <ChatPanel 
             selectedFile={selectedFile}
             chatHistory={chatHistory}
