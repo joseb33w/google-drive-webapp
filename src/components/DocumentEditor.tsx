@@ -36,6 +36,12 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
       }),
     ],
     content: documentContent,
+    editorProps: {
+      attributes: {
+        class: 'focus:outline-none',
+        style: 'color: #000000; background-color: white; font-size: 16px; line-height: 1.6;',
+      },
+    },
     onUpdate: ({ editor }) => {
       const content = editor.getHTML();
       setDocumentContent(content);
@@ -49,6 +55,7 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
       editor.commands.setContent(documentContent);
     }
   }, [documentContent, editor]);
+
 
   const loadDocumentContent = useCallback(async () => {
     if (!file?.id || !user) return;
@@ -205,11 +212,17 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
       </div>
 
       {/* Editor */}
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 bg-white overflow-y-auto">
         <div className="max-w-4xl mx-auto">
           <EditorContent 
             editor={editor} 
-            className="prose prose-lg max-w-none focus:outline-none"
+            className="focus:outline-none"
+            style={{ 
+              color: '#000000',
+              backgroundColor: 'white',
+              fontSize: '16px',
+              lineHeight: '1.6'
+            }}
           />
         </div>
       </div>

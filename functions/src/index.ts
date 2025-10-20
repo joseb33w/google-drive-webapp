@@ -309,6 +309,7 @@ async function getOAuthClient(uid: string) {
   return oauth2Client;
 }
 
+
 // Google Drive operations - direct integration with Firebase Auth
 export const googleDriveOperations = onRequest({ 
   region: 'us-south1',
@@ -504,6 +505,79 @@ export const storeOAuthTokens = onCall({
   } catch (error) {
     console.error('Error storing OAuth tokens:', error);
     throw new functions.https.HttpsError('internal', 'Failed to store OAuth tokens');
+  }
+});
+
+// Exchange OAuth authorization code for tokens
+export const exchangeOAuthCode = onRequest({ 
+  region: 'us-south1',
+  timeoutSeconds: 60,
+  memory: '256MiB'
+}, async (req, res) => {
+  // Set CORS headers
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  try {
+    const { code, redirectUri } = req.body;
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'Authorization header required' });
+      return;
+    }
+
+    const idToken = authHeader.split('Bearer ')[1];
+    
+    // Verify the Firebase ID token
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const uid = decodedToken.uid;
+
+    if (!code) {
+      res.status(400).json({ error: 'Authorization code is required' });
+      return;
+    }
+
+    // Exchange authorization code for tokens
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      redirectUri || 'https://google-drive-webapp-9xjr.vercel.app'
+    );
+
+    const { tokens } = await oauth2Client.getToken(code);
+    
+    // Store tokens in Firestore
+    const db = admin.firestore();
+    await db.collection('userTokens').doc(uid).set({
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      expiry_date: tokens.expiry_date,
+      created_at: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    console.log('Exchanged OAuth code for tokens for user:', uid);
+    res.json({ success: true });
+
+  } catch (error: any) {
+    console.error('OAuth code exchange error:', error);
+    res.status(500).json({ 
+      error: 'Failed to exchange OAuth code',
+      details: error.message 
+    });
   }
 });
 

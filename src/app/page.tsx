@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import FileList from '@/components/FileList';
 import DocumentEditor from '@/components/DocumentEditor';
 import ChatPanel from '@/components/ChatPanel';
@@ -27,7 +27,7 @@ export default function Home() {
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
 
   return (
-    <div className="h-screen flex bg-gray-50">
+    <div className="h-screen flex bg-white overflow-hidden">
       {/* Left Panel - File List */}
       <div className="w-1/4 border-r border-gray-200 bg-white">
         <div className="p-4 border-b border-gray-200">
@@ -40,7 +40,7 @@ export default function Home() {
       </div>
 
       {/* Middle Panel - Document Editor */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col bg-white">
         <div className="p-4 border-b border-gray-200 bg-white">
           <h2 className="text-lg font-semibold text-gray-800">
             {selectedFile ? selectedFile.name : 'Select a document to edit'}

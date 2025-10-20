@@ -110,10 +110,11 @@ export default function ChatPanel({ selectedFile, chatHistory, onChatUpdate }: C
     onChatUpdate([]);
   };
 
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white">
       {/* Chat header */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-medium text-gray-900">AI Assistant</h3>
@@ -133,7 +134,7 @@ export default function ChatPanel({ selectedFile, chatHistory, onChatUpdate }: C
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
         {chatHistory.length === 0 ? (
           <div className="text-center text-gray-500">
             <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
@@ -189,21 +190,21 @@ export default function ChatPanel({ selectedFile, chatHistory, onChatUpdate }: C
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-gray-200 bg-white">
         <div className="flex space-x-2">
           <textarea
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Ask the AI to help with your document..."
-            className="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
             rows={2}
             disabled={isLoading}
           />
           <button
             onClick={sendMessage}
             disabled={!inputMessage.trim() || isLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
           >
             Send
           </button>
