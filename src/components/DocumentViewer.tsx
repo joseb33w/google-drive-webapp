@@ -19,8 +19,6 @@ interface DocumentViewerProps {
 }
 
 export default function DocumentViewer({ selectedFile }: DocumentViewerProps) {
-  const [documentContent, setDocumentContent] = useState<{title: string; content: Array<{type: string; text?: string}>} | null>(null);
-  const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
   // Set up auth state listener
@@ -31,46 +29,9 @@ export default function DocumentViewer({ selectedFile }: DocumentViewerProps) {
     return () => unsubscribe();
   }, []);
 
-  // Load document content when a file is selected
-  const loadDocumentContent = async (file: File) => {
-    if (!file?.id || !user) return;
-
-    setLoading(true);
-    try {
-      const idToken = await user.getIdToken();
-      
-      const response = await fetch('https://us-south1-try-mcp-15e08.cloudfunctions.net/googleDriveOperations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({
-          operation: 'get_document',
-          params: {
-            documentId: file.id
-          }
-        })
-      });
-
-      const data = await response.json();
-      if (data.result) {
-        setDocumentContent(data.result);
-      }
-    } catch (error) {
-      console.error('Error loading document:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Load document when file is selected
   useEffect(() => {
-    if (selectedFile) {
-      loadDocumentContent(selectedFile);
-    } else {
-      setDocumentContent(null);
-    }
+    // This effect is intentionally empty for the test
   }, [selectedFile, user]);
 
   return (
@@ -120,7 +81,7 @@ export default function DocumentViewer({ selectedFile }: DocumentViewerProps) {
               Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.
               This paragraph is intentionally very long to test scrolling behavior and ensure the content area
               properly constrains the text and shows a scrollbar when needed. If you can see this text, 
-              the scrolling is working correctly. If the text overflows without a scrollbar, there's still an issue.
+              the scrolling is working correctly. If the text overflows without a scrollbar, there&apos;s still an issue.
               Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
               Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
               Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
