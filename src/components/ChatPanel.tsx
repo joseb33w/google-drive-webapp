@@ -55,9 +55,11 @@ interface ChatPanelProps {
   onEditProposal: (edit: EditProposal) => void;
   onAcceptEdit: (messageId: string) => void;
   onRejectEdit: (messageId: string) => void;
+  selectedModel: string;
+  onModelChange: (model: string) => void;
 }
 
-export default function ChatPanel({ selectedFile, documentContent, chatHistory, onChatUpdate, onEditProposal, onAcceptEdit, onRejectEdit }: ChatPanelProps) {
+export default function ChatPanel({ selectedFile, documentContent, chatHistory, onChatUpdate, onEditProposal, onAcceptEdit, onRejectEdit, selectedModel, onModelChange }: ChatPanelProps) {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -111,7 +113,8 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
             content: documentContent.content?.map((item: DocumentContentItem) => item.text).join('\n') || 'No content available'
           } : null,
           chatHistory: newMessages.slice(-10), // Send last 10 messages for context
-          idToken: idToken
+          idToken: idToken, // Pass ID token to API route
+          model: selectedModel // Pass selected model
         }),
       });
 
@@ -187,12 +190,24 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
               </p>
             )}
           </div>
-          <button
-            onClick={clearChat}
-            className="text-xs text-gray-500 hover:text-gray-700"
-          >
-            Clear
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Model Selection */}
+            <select
+              value={selectedModel}
+              onChange={(e) => onModelChange(e.target.value)}
+              className="text-xs border border-gray-300 rounded px-2 py-1 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="gpt-5-chat-latest">GPT-5 Chat Latest</option>
+              <option value="claude-4.5-sonnet">Claude 4.5 Sonnet</option>
+              <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+            </select>
+            <button
+              onClick={clearChat}
+              className="text-xs text-gray-500 hover:text-gray-700"
+            >
+              Clear
+            </button>
+          </div>
         </div>
       </div>
 

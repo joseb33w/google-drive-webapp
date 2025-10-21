@@ -4,12 +4,95 @@ import OpenAI from 'openai';
 import axios from 'axios';
 import { onCall, onRequest } from 'firebase-functions/v2/https';
 import { google } from 'googleapis';
+import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize Firebase Admin
 admin.initializeApp();
 
+// Initialize AI clients (will be initialized when needed)
+let openai: OpenAI;
+let anthropic: Anthropic;
+let genAI: GoogleGenerativeAI;
+
+function initializeClients() {
+  if (!openai) {
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  if (!anthropic) {
+    anthropic = new Anthropic({
+      apiKey: process.env.CLAUDE_API_KEY,
+    });
+  }
+  if (!genAI) {
+    genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+  }
+}
+
 // Railway API URL - using environment variables
 const RAILWAY_API_URL = process.env.RAILWAY_API_URL || 'https://google-mcp-tools-access-production.up.railway.app';
+
+// Individual AI model functions
+async function callOpenAI(messages: any[], systemPrompt: string) {
+  initializeClients();
+  
+  const fullMessages = [
+    { role: 'system', content: systemPrompt },
+    ...messages
+  ];
+
+  const openaiCompletion = await openai.chat.completions.create({
+    model: 'gpt-5-chat-latest',
+    messages: fullMessages,
+    max_tokens: 1000,
+    temperature: 0.7,
+  });
+  
+  return openaiCompletion.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
+}
+
+async function callClaude(messages: any[], systemPrompt: string) {
+  initializeClients();
+  
+  const claudeCompletion = await anthropic.messages.create({
+    model: 'claude-sonnet-4-5-20250929',
+    max_tokens: 1000,
+    temperature: 0.7,
+    messages: messages.map(msg => ({
+      role: msg.role === 'system' ? 'user' : msg.role,
+      content: msg.role === 'system' ? `System: ${msg.content}` : msg.content
+    }))
+  });
+  
+  return claudeCompletion.content[0]?.type === 'text' ? claudeCompletion.content[0].text : 'Sorry, I could not generate a response.';
+}
+
+async function callGemini(messages: any[], systemPrompt: string) {
+  initializeClients();
+  
+  const geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+  const geminiCompletion = await geminiModel.generateContent(
+    `${systemPrompt}\n\n${messages.map(m => `${m.role}: ${m.content}`).join('\n')}`
+  );
+  
+  return geminiCompletion.response.text() || 'Sorry, I could not generate a response.';
+}
+
+// Main AI model router function
+async function callAIModel(model: string, messages: any[], systemPrompt: string) {
+  switch (model) {
+    case 'gpt-5-chat-latest':
+      return await callOpenAI(messages, systemPrompt);
+    case 'claude-4.5-sonnet':
+      return await callClaude(messages, systemPrompt);
+    case 'gemini-2.5-pro':
+      return await callGemini(messages, systemPrompt);
+    default:
+      throw new Error(`Unsupported model: ${model}`);
+  }
+}
 
 // Secure chat endpoint
 export const chat = onCall({ 
@@ -175,13 +258,8 @@ export const chatHttp = onRequest({
     return;
   }
 
-  // Initialize OpenAI with environment variable
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-  
   // Log successful initialization for debugging
-  console.log('OpenAI client initialized successfully with updated API key');
+  console.log('AI client initialized successfully');
 
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
@@ -189,7 +267,7 @@ export const chatHttp = onRequest({
   }
 
   try {
-    const { message, documentContext, chatHistory } = req.body;
+    const { message, documentContext, chatHistory, model } = req.body;
 
     if (!message) {
       res.status(400).json({ error: 'Message is required' });
@@ -248,15 +326,9 @@ For non-edit requests, respond with plain text.`;
       content: message
     });
 
-    // Call OpenAI API with GPT-5 Chat Latest
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-5-chat-latest',
-      messages: messages,
-      max_tokens: 1000,
-      temperature: 0.7,
-    });
-
-    const response = completion.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
+    // Call AI model using the unified handler
+    const selectedModel = model || 'gpt-5-chat-latest';
+    const response = await callAIModel(selectedModel, messages, systemPrompt);
 
     // Try to parse JSON response for edit proposals
     let parsedResponse;

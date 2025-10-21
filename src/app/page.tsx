@@ -54,6 +54,9 @@ export default function Home() {
     replaceText: string;
   } | null>(null);
   
+  // Model selection state
+  const [selectedModel, setSelectedModel] = useState('gpt-5-chat-latest');
+  
   // Panel widths (in percentages)
   const [leftWidth, setLeftWidth] = useState(25);
   const [middleWidth, setMiddleWidth] = useState(50);
@@ -484,6 +487,8 @@ export default function Home() {
             onEditProposal={setPendingEdit}
             onAcceptEdit={handleAcceptEdit}
             onRejectEdit={handleRejectEdit}
+            selectedModel={selectedModel}
+            onModelChange={setSelectedModel}
           />
         </div>
       </div>

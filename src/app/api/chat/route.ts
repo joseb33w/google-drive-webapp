@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, documentContext, chatHistory, idToken } = await request.json();
+    const { message, documentContext, chatHistory, idToken, model } = await request.json();
 
     if (!message) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
@@ -21,11 +21,12 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${idToken}`,
       },
-      body: JSON.stringify({
-        message,
-        documentContext,
-        chatHistory
-      })
+    body: JSON.stringify({
+      message,
+      documentContext,
+      chatHistory,
+      model: model || 'gpt-5-chat-latest'
+    })
     });
 
     if (!response.ok) {
