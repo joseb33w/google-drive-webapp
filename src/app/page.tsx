@@ -28,7 +28,7 @@ export default function Home() {
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
 
   return (
-    <div className="h-screen w-full flex bg-white overflow-hidden">
+    <div className="h-screen w-full flex bg-white">
       {/* Left Panel - File List */}
       <div className="w-1/4 border-r border-gray-200 bg-white flex flex-col min-h-0 overflow-hidden">
         <div className="p-4 border-b border-gray-200 flex-shrink-0 bg-white">
