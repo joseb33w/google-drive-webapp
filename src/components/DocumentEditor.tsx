@@ -175,31 +175,28 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
       {/* Document content */}
       {documentData && (
         <div 
-          className="flex-1 min-h-0"
           style={{
-            overflowY: 'auto',
-            height: '100%',
-            maxHeight: 'calc(100vh - 200px)'
+            flex: '1 1 0',
+            minHeight: '0',
+            overflowY: 'scroll',
+            height: '0',
+            border: '1px solid red'
           }}
         >
-          <div className="p-6">
-            <div className="max-w-2xl mx-auto">
-              <div className="prose prose-lg">
-                <div className="space-y-4">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-6">
-                    {documentData.title}
-                  </h1>
-                  {documentData.content?.map((item: {type: string; text?: string}, index: number) => (
-                    <div key={index} className="mb-3">
-                      {item.type === 'paragraph' && item.text && (
-                        <p className="text-gray-800 leading-relaxed">
-                          {item.text}
-                        </p>
-                      )}
-                    </div>
-                  ))}
+          <div style={{ padding: '24px' }}>
+            <div style={{ maxWidth: '65ch', margin: '0 auto' }}>
+              <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827', marginBottom: '1.5rem' }}>
+                {documentData.title}
+              </h1>
+              {documentData.content?.map((item: {type: string; text?: string}, index: number) => (
+                <div key={index} style={{ marginBottom: '0.75rem' }}>
+                  {item.type === 'paragraph' && item.text && (
+                    <p style={{ color: '#374151', lineHeight: '1.625' }}>
+                      {item.text}
+                    </p>
+                  )}
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
