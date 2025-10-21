@@ -36,6 +36,8 @@ body {
   min-height: 100%;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  max-width: 65ch; /* Optimal reading line length */
+  margin: 0 auto; /* Center the content */
 }
 
 /* Ensure the editor content area is properly constrained */
@@ -43,11 +45,19 @@ body {
   outline: none;
 }
 
-/* Fix any potential overflow issues */
+/* Fix any potential overflow issues and improve readability */
 .ProseMirror p {
   margin: 0 0 1em 0;
+  max-width: 65ch; /* Constrain paragraph width for readability */
 }
 
 .ProseMirror p:last-child {
   margin-bottom: 0;
+}
+
+/* Ensure proper text flow and prevent horizontal overflow */
+.ProseMirror * {
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
