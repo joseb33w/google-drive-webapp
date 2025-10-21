@@ -32,12 +32,13 @@ body {
 
 /* Ensure text is visible and properly constrained */
 .ProseMirror {
-  color: #000000;
+  color: #000000 !important;
   min-height: 100%;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  max-width: 65ch; /* Optimal reading line length */
-  margin: 0 auto; /* Center the content */
+  max-width: 65ch !important; /* Optimal reading line length */
+  margin: 0 auto !important; /* Center the content */
+  width: 100% !important;
 }
 
 /* Ensure the editor content area is properly constrained */
@@ -48,7 +49,8 @@ body {
 /* Fix any potential overflow issues and improve readability */
 .ProseMirror p {
   margin: 0 0 1em 0;
-  max-width: 65ch; /* Constrain paragraph width for readability */
+  max-width: 65ch !important; /* Constrain paragraph width for readability */
+  width: 100% !important;
 }
 
 .ProseMirror p:last-child {
@@ -57,7 +59,13 @@ body {
 
 /* Ensure proper text flow and prevent horizontal overflow */
 .ProseMirror * {
-  max-width: 100%;
+  max-width: 100% !important;
   word-wrap: break-word;
   overflow-wrap: break-word;
+}
+
+/* Force the editor content to respect the container width */
+.ProseMirror .ProseMirror-content {
+  max-width: 65ch !important;
+  margin: 0 auto !important;
 }
