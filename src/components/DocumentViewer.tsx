@@ -74,7 +74,7 @@ export default function DocumentViewer({ selectedFile }: DocumentViewerProps) {
   }, [selectedFile, user]);
 
   return (
-    <div className="flex-1 flex flex-col bg-white" style={{ height: '100vh', maxHeight: '100vh' }}>
+    <div className="flex-1 flex flex-col bg-white min-h-0">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 flex-shrink-0 bg-white">
         <h2 className="text-lg font-semibold text-gray-800">
@@ -82,16 +82,9 @@ export default function DocumentViewer({ selectedFile }: DocumentViewerProps) {
         </h2>
       </div>
       
-      {/* Content Area - Fixed Height Container */}
+      {/* Content Area - Scrollable Container */}
       <div 
-        className="flex-1 bg-white p-4" 
-        style={{ 
-          height: 'calc(100vh - 120px)', 
-          maxHeight: 'calc(100vh - 120px)',
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          position: 'relative'
-        }}
+        className="flex-1 bg-white p-4 overflow-y-auto overflow-x-hidden min-h-0"
       >
         {loading ? (
           <div className="text-gray-500 text-center mt-8">
