@@ -83,13 +83,19 @@ export default function DocumentViewer({ selectedFile }: DocumentViewerProps) {
       </div>
       
       {/* Content Area - Scrollable Container */}
-      <div className="flex-1 overflow-y-auto min-h-0 bg-white p-4">
+      <div 
+        className="flex-1 overflow-y-auto min-h-0 bg-white p-4"
+        style={{
+          height: '0px', // Force flex item to respect container height
+          flex: '1 1 0%'
+        }}
+      >
         {loading ? (
           <div className="text-gray-500 text-center mt-8">
             Loading document...
           </div>
         ) : documentContent ? (
-          <div className="prose max-w-none">
+          <div style={{ maxWidth: 'none', margin: 0 }}>
             <h1 className="text-2xl font-bold text-gray-900 mb-6">
               {documentContent.title}
             </h1>
