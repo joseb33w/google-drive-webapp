@@ -187,7 +187,7 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
   }
 
   return (
-    <div className="h-full flex flex-col bg-white overflow-hidden">
+    <div className="h-full max-h-full flex flex-col bg-white overflow-hidden">
       {/* Toolbar */}
       <div className="border-b border-gray-200 p-4 flex-shrink-0 bg-white">
         <div className="flex items-center justify-between">
@@ -214,18 +214,17 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
       </div>
 
       {/* Editor - Fixed height with scroll */}
-      <div className="flex-1 bg-white overflow-hidden">
-        <div className="h-full overflow-y-auto p-6">
+      <div className="flex-1 max-h-full bg-white overflow-hidden">
+        <div className="h-full max-h-full overflow-y-auto p-6">
           <div className="max-w-4xl mx-auto">
             <EditorContent 
               editor={editor} 
-              className="focus:outline-none min-h-full"
+              className="focus:outline-none"
               style={{ 
                 color: '#000000',
                 backgroundColor: 'white',
                 fontSize: '16px',
-                lineHeight: '1.6',
-                minHeight: '100%'
+                lineHeight: '1.6'
               }}
             />
           </div>
