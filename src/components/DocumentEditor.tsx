@@ -139,7 +139,7 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
   }
 
   return (
-    <div className="flex flex-col bg-white min-h-0 overflow-y-auto">
+    <div className="flex flex-col bg-white min-h-0">
       {/* Toolbar */}
       <div className="border-b border-gray-200 p-4 flex-shrink-0 bg-white">
         <div className="flex items-center justify-between">
