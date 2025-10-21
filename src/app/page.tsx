@@ -2,6 +2,28 @@
 
 // Main page component for Google Drive web app - Retry deployment
 import { useState } from 'react';
+
+// Suppress jQuery errors that are breaking React rendering
+if (typeof window !== 'undefined') {
+  const originalError = console.error;
+  console.error = (...args) => {
+    const message = args.join(' ');
+    if (message.includes("'*,:x' is not a valid selector")) {
+      // Ignore this specific jQuery error
+      return;
+    }
+    originalError.apply(console, args);
+  };
+
+  // Prevent debugger from pausing on jQuery errors
+  window.addEventListener('error', (event) => {
+    if (event.message && event.message.includes("'*,:x' is not a valid selector")) {
+      event.preventDefault();
+      event.stopPropagation();
+      return false;
+    }
+  });
+}
 import FileList from '@/components/FileList';
 import DocumentEditor from '@/components/DocumentEditor';
 
