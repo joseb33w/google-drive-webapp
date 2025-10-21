@@ -57,9 +57,6 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
       if (data.result) {
         // Store the raw document data for better display
         setDocumentData(data.result);
-        // Also convert to HTML for backward compatibility
-        const htmlContent = convertGoogleDocsToHTML(data.result.content);
-        setDocumentContent(htmlContent);
       }
     } catch (error) {
       console.error('Error loading document:', error);
@@ -106,7 +103,7 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
           params: {
             documentId: file.id,
             findText: '', // This would need to be the current content
-            replaceWithText: convertHTMLToPlainText(documentContent)
+            replaceWithText: documentContent
           }
         })
       });
@@ -122,26 +119,6 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
     }
   };
 
-  // Convert Google Docs content to HTML
-  const convertGoogleDocsToHTML = (content: Array<{type: string; text?: string}>): string => {
-    if (!content) return '';
-    
-    return content
-      .map((item) => {
-        if (item.type === 'paragraph' && item.text) {
-          return `<p>${item.text}</p>`;
-        }
-        return '';
-      })
-      .join('');
-  };
-
-  // Convert HTML to plain text for Google Docs
-  const convertHTMLToPlainText = (html: string): string => {
-    const temp = document.createElement('div');
-    temp.innerHTML = html;
-    return temp.textContent || temp.innerText || '';
-  };
 
   if (!file) {
     return (
@@ -162,7 +139,7 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
   }
 
   return (
-    <div className="flex flex-col h-full bg-white min-h-0">
+    <div className="flex flex-col h-full bg-white min-h-0 overflow-y-auto">
       {/* Toolbar */}
       <div className="border-b border-gray-200 p-4 flex-shrink-0 bg-white">
         <div className="flex items-center justify-between">
@@ -188,41 +165,6 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
         </div>
       </div>
 
-      {/* Editor - Content container */}
-      <div className="flex-1 bg-white min-h-0 overflow-y-auto">
-        <div className="p-6">
-          <div className="max-w-2xl mx-auto">
-            <div className="prose prose-lg">
-              {documentData ? (
-                <div className="space-y-4">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-6">
-                    {documentData.title}
-                  </h1>
-                  {documentData.content?.map((item: {type: string; text?: string}, index: number) => (
-                    <div key={index} className="mb-3">
-                      {item.type === 'paragraph' && item.text && (
-                        <p className="text-gray-800 leading-relaxed">
-                          {item.text}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Document Content</h3>
-                  <p className="text-gray-500">Click &quot;Reload&quot; to load the document content</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
