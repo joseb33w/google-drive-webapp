@@ -49,7 +49,7 @@ export default function Home() {
             {selectedFile ? selectedFile.name : 'Select a document to edit'}
           </h2>
         </div>
-        <div className="flex-1 overflow-y-auto min-h-0 bg-white">
+        <div className="flex-1 min-h-0 bg-white">
           <DocumentEditor 
             file={selectedFile}
             onContentChange={(content) => {

@@ -167,22 +167,24 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
 
       {/* Document content */}
       {documentData && (
-        <div className="p-6">
-          <div className="max-w-2xl mx-auto">
-            <div className="prose prose-lg">
-              <div className="space-y-4">
-                <h1 className="text-2xl font-bold text-gray-900 mb-6">
-                  {documentData.title}
-                </h1>
-                {documentData.content?.map((item: {type: string; text?: string}, index: number) => (
-                  <div key={index} className="mb-3">
-                    {item.type === 'paragraph' && item.text && (
-                      <p className="text-gray-800 leading-relaxed">
-                        {item.text}
-                      </p>
-                    )}
-                  </div>
-                ))}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="p-6">
+            <div className="max-w-2xl mx-auto">
+              <div className="prose prose-lg">
+                <div className="space-y-4">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-6">
+                    {documentData.title}
+                  </h1>
+                  {documentData.content?.map((item: {type: string; text?: string}, index: number) => (
+                    <div key={index} className="mb-3">
+                      {item.type === 'paragraph' && item.text && (
+                        <p className="text-gray-800 leading-relaxed">
+                          {item.text}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
