@@ -214,20 +214,24 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
       </div>
 
       {/* Editor - Properly constrained scrollable content */}
-      <div className="flex-1 overflow-y-auto bg-white min-h-0">
+      <div className="flex-1 overflow-y-auto bg-white min-h-0" style={{ maxHeight: 'calc(100vh - 200px)' }}>
         <div className="p-6">
-          <div className="max-w-2xl mx-auto" style={{ maxWidth: '65ch' }}>
+          <div style={{ 
+            maxWidth: '65ch', 
+            margin: '0 auto',
+            width: '100%'
+          }}>
             <EditorContent 
               editor={editor} 
-              className="focus:outline-none min-h-full"
+              className="focus:outline-none"
               style={{ 
                 color: '#000000',
                 backgroundColor: 'white',
                 fontSize: '16px',
                 lineHeight: '1.6',
-                minHeight: '100%',
-                width: '100%',
-                maxWidth: '100%'
+                maxWidth: '65ch',
+                margin: '0 auto',
+                width: '100%'
               }}
             />
           </div>

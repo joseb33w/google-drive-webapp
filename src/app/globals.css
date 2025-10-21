@@ -30,42 +30,67 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Ensure text is visible and properly constrained */
+/* FORCE TipTap editor to respect our constraints */
 .ProseMirror {
   color: #000000 !important;
-  min-height: 100%;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
   max-width: 65ch !important; /* Optimal reading line length */
   margin: 0 auto !important; /* Center the content */
   width: 100% !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  box-sizing: border-box !important;
 }
 
 /* Ensure the editor content area is properly constrained */
 .ProseMirror-focused {
-  outline: none;
+  outline: none !important;
 }
 
-/* Fix any potential overflow issues and improve readability */
+/* Force all paragraphs to respect width constraints */
 .ProseMirror p {
-  margin: 0 0 1em 0;
-  max-width: 65ch !important; /* Constrain paragraph width for readability */
+  margin: 0 0 1em 0 !important;
+  max-width: 65ch !important;
   width: 100% !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  box-sizing: border-box !important;
 }
 
 .ProseMirror p:last-child {
-  margin-bottom: 0;
+  margin-bottom: 0 !important;
 }
 
-/* Ensure proper text flow and prevent horizontal overflow */
+/* Force ALL elements to respect width constraints */
 .ProseMirror * {
-  max-width: 100% !important;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
+  max-width: 65ch !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  box-sizing: border-box !important;
 }
 
-/* Force the editor content to respect the container width */
+/* Force the editor content wrapper */
 .ProseMirror .ProseMirror-content {
   max-width: 65ch !important;
   margin: 0 auto !important;
+  width: 100% !important;
+}
+
+/* Force the editor root element */
+.ProseMirror-root {
+  max-width: 65ch !important;
+  margin: 0 auto !important;
+  width: 100% !important;
+}
+
+/* Override any TipTap default styles */
+[data-tiptap-editor] {
+  max-width: 65ch !important;
+  margin: 0 auto !important;
+  width: 100% !important;
+}
+
+[data-tiptap-editor] * {
+  max-width: 65ch !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
 }
