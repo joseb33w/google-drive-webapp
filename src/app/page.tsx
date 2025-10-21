@@ -97,6 +97,12 @@ export default function Home() {
     <div 
       ref={containerRef}
       className="h-screen w-full flex bg-gray-50 overflow-hidden"
+      style={{
+        transform: 'translateZ(0)',
+        backfaceVisibility: 'hidden',
+        WebkitFontSmoothing: 'antialiased',
+        MozOsxFontSmoothing: 'grayscale'
+      }}
     >
       {/* Left Panel - File List */}
       <div 
@@ -145,7 +151,7 @@ export default function Home() {
               {/* Add some test content to demonstrate scrolling */}
               <div className="space-y-4">
                 {Array.from({ length: 30 }, (_, i) => (
-                  <p key={i} className="text-gray-900 leading-relaxed text-base">
+                  <p key={i} className="text-gray-900 leading-relaxed text-base" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
                     This is paragraph {i + 1} of the document content. Lorem ipsum dolor sit amet, 
                     consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et 
                     dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation 
