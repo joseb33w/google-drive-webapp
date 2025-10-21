@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
+// Removed TipTap imports
+// Removed TipTap placeholder import
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 
@@ -28,33 +27,12 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
   const [saving, setSaving] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Placeholder.configure({
-        placeholder: 'Start typing your document...',
-      }),
-    ],
-    content: documentContent,
-    editorProps: {
-      attributes: {
-        class: 'focus:outline-none',
-        style: 'color: #000000; background-color: white; font-size: 16px; line-height: 1.6;',
-      },
-    },
-    onUpdate: ({ editor }) => {
-      const content = editor.getHTML();
-      setDocumentContent(content);
-      onContentChange(content);
-    },
-  });
-
-  // Update editor content when documentContent changes
-  useEffect(() => {
-    if (editor && documentContent !== editor.getHTML()) {
-      editor.commands.setContent(documentContent);
-    }
-  }, [documentContent, editor]);
+  // Simple textarea instead of TipTap editor
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const content = e.target.value;
+    setDocumentContent(content);
+    onContentChange(content);
+  };
 
 
   const loadDocumentContent = useCallback(async () => {
@@ -218,16 +196,17 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
         <div className="p-6">
           <div className="max-w-2xl mx-auto">
             <div className="prose prose-lg">
-              <EditorContent 
-                editor={editor} 
-                className="focus:outline-none"
+              <textarea
+                value={documentContent}
+                onChange={handleContentChange}
+                placeholder="Start typing your document..."
+                className="w-full h-full p-4 border-none resize-none focus:outline-none"
                 style={{ 
                   color: '#000000',
                   backgroundColor: 'white',
                   fontSize: '16px',
                   lineHeight: '1.6',
-                  maxHeight: 'calc(100vh - 200px)',
-                  overflow: 'hidden'
+                  fontFamily: 'inherit'
                 }}
               />
             </div>
