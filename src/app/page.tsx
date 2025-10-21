@@ -156,6 +156,8 @@ export default function Home() {
       }
 
       const data = await response.json();
+      console.log('Document API response:', data);
+      console.log('Document content:', data.result);
       setDocumentContent(data.result);
     } catch (error) {
       console.error('Error loading document:', error);
@@ -247,6 +249,12 @@ export default function Home() {
                       
                       {/* Display actual document content */}
                       <div className="prose max-w-none">
+                        <div className="mb-4 p-2 bg-blue-50 rounded text-sm">
+                          <p><strong>Debug Info:</strong></p>
+                          <p>Content length: {documentContent.content?.length || 0}</p>
+                          <p>Content type: {typeof documentContent.content}</p>
+                          <p>Content: {JSON.stringify(documentContent.content, null, 2)}</p>
+                        </div>
                         {documentContent.content && documentContent.content.length > 0 ? (
                           documentContent.content.map((item: DocumentContentItem, index: number) => (
                             <p key={index} className="text-gray-900 leading-relaxed text-base mb-4">
