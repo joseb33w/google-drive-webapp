@@ -170,7 +170,7 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
 
   if (!file) {
     return (
-      <div className="h-full flex flex-col bg-white overflow-hidden">
+      <div className="h-full flex flex-col bg-white">
         <div className="flex-1 flex items-center justify-center bg-white">
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">
@@ -187,7 +187,7 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
   }
 
   return (
-    <div className="flex flex-col h-full bg-white min-h-0 overflow-hidden">
+    <div className="flex flex-col h-full bg-white min-h-0">
       {/* Toolbar */}
       <div className="border-b border-gray-200 p-4 flex-shrink-0 bg-white">
         <div className="flex items-center justify-between">
