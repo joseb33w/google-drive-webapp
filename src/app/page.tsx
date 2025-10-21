@@ -1,7 +1,7 @@
 'use client';
 
 // Main page component for Google Drive web app - Retry deployment
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 // Suppress jQuery errors that are breaking React rendering
 if (typeof window !== 'undefined') {
@@ -51,6 +51,11 @@ export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
 
+  // Debug log for DocumentEditor rendering
+  useEffect(() => {
+    console.log('🚨 About to render DocumentEditor with file:', selectedFile?.name);
+  }, [selectedFile]);
+
   return (
     <div className="h-screen w-full flex bg-white">
       {/* Left Panel - File List */}
@@ -67,7 +72,6 @@ export default function Home() {
       </div>
 
       {/* Middle Panel - Document Editor */}
-      {console.log('🚨 About to render DocumentEditor with file:', selectedFile?.name)}
       <DocumentEditor 
         file={selectedFile}
         onContentChange={(content) => {
