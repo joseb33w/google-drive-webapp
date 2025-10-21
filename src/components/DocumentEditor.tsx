@@ -22,6 +22,8 @@ interface DocumentEditorProps {
 }
 
 export default function DocumentEditor({ file, onContentChange }: DocumentEditorProps) {
+  console.log('🚨 DocumentEditor component called!', { file: file?.name });
+  
   const [documentContent, setDocumentContent] = useState('');
   const [documentData, setDocumentData] = useState<{title: string; content: Array<{type: string; text?: string}>} | null>(null);
   const [loading, setLoading] = useState(false);
