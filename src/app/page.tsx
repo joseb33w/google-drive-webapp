@@ -243,7 +243,7 @@ export default function Home() {
                       <p className="text-red-800">{documentContent.error}</p>
                       {documentContent.error.includes('OAuth') && (
                         <p className="text-sm text-red-700 mt-4">
-                          Please click "Authorize Google Drive" in the left panel to grant access.
+                          Please click &quot;Authorize Google Drive&quot; in the left panel to grant access.
                         </p>
                       )}
                     </div>
