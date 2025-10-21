@@ -170,24 +170,26 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
 
   if (!file) {
     return (
-      <div className="h-full flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+      <div className="h-full flex flex-col bg-white overflow-hidden">
+        <div className="flex-1 flex items-center justify-center bg-white">
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No document selected</h3>
+            <p className="text-gray-500">Choose a document from the left panel to start editing</p>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No document selected</h3>
-          <p className="text-gray-500">Choose a document from the left panel to start editing</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-white overflow-hidden">
       {/* Toolbar */}
-      <div className="border-b border-gray-200 p-4 flex-shrink-0">
+      <div className="border-b border-gray-200 p-4 flex-shrink-0 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <button
@@ -211,19 +213,22 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
         </div>
       </div>
 
-      {/* Editor */}
-      <div className="flex-1 p-6 bg-white overflow-y-auto min-h-0">
-        <div className="max-w-4xl mx-auto">
-          <EditorContent 
-            editor={editor} 
-            className="focus:outline-none"
-            style={{ 
-              color: '#000000',
-              backgroundColor: 'white',
-              fontSize: '16px',
-              lineHeight: '1.6'
-            }}
-          />
+      {/* Editor - Fixed height with scroll */}
+      <div className="flex-1 bg-white overflow-hidden">
+        <div className="h-full overflow-y-auto p-6">
+          <div className="max-w-4xl mx-auto">
+            <EditorContent 
+              editor={editor} 
+              className="focus:outline-none min-h-full"
+              style={{ 
+                color: '#000000',
+                backgroundColor: 'white',
+                fontSize: '16px',
+                lineHeight: '1.6',
+                minHeight: '100%'
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>
