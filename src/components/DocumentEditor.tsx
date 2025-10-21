@@ -213,8 +213,8 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
         </div>
       </div>
 
-      {/* Editor - Scrollable content container */}
-      <div className="flex-1 overflow-y-auto bg-white min-h-0">
+      {/* Editor - Content container */}
+      <div className="flex-1 bg-white min-h-0">
         <div className="p-6">
           <div className="max-w-2xl mx-auto">
             <div className="prose prose-lg max-w-none">
