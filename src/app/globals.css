@@ -30,7 +30,24 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Ensure text is visible */
+/* Ensure text is visible and properly constrained */
 .ProseMirror {
   color: #000000;
+  min-height: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Ensure the editor content area is properly constrained */
+.ProseMirror-focused {
+  outline: none;
+}
+
+/* Fix any potential overflow issues */
+.ProseMirror p {
+  margin: 0 0 1em 0;
+}
+
+.ProseMirror p:last-child {
+  margin-bottom: 0;
 }
