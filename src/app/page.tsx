@@ -25,9 +25,9 @@ if (typeof window !== 'undefined') {
   });
 }
 import FileList from '@/components/FileList';
-import DocumentEditor from '@/components/DocumentEditor';
+// import DocumentEditor from '@/components/DocumentEditor'; // REMOVED - not working
 
-console.log('🔍 DocumentEditor imported:', DocumentEditor);
+// console.log('🔍 DocumentEditor imported:', DocumentEditor); // REMOVED
 import ChatPanel from '@/components/ChatPanel';
 
 interface File {
@@ -72,13 +72,24 @@ export default function Home() {
       </div>
 
       {/* Middle Panel - Document Editor */}
-      <DocumentEditor 
-        file={selectedFile}
-        onContentChange={(content) => {
-          // Handle content changes
-          console.log('Content changed:', content);
-        }}
-      />
+      <div className="flex-1 flex flex-col bg-white min-h-0 overflow-hidden">
+        <div className="p-4 border-b border-gray-200 flex-shrink-0 bg-white">
+          <h2 className="text-lg font-semibold text-gray-800">
+            {selectedFile ? selectedFile.name : 'No file selected'}
+          </h2>
+        </div>
+        <div className="flex-1 overflow-y-auto min-h-0 bg-white p-4">
+          {selectedFile ? (
+            <div className="prose max-w-none">
+              <p>Document content will be loaded here...</p>
+            </div>
+          ) : (
+            <div className="text-gray-500 text-center mt-8">
+              Select a file from the left panel to view its content
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Right Panel - AI Chat */}
       <div className="w-1/4 border-l border-gray-200 bg-white flex flex-col min-h-0 overflow-hidden">
