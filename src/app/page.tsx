@@ -4,6 +4,8 @@
 import { useState } from 'react';
 import FileList from '@/components/FileList';
 import DocumentEditor from '@/components/DocumentEditor';
+
+console.log('🔍 DocumentEditor imported:', DocumentEditor);
 import ChatPanel from '@/components/ChatPanel';
 
 interface File {
@@ -43,6 +45,7 @@ export default function Home() {
       </div>
 
       {/* Middle Panel - Document Editor */}
+      {console.log('🚨 About to render DocumentEditor with file:', selectedFile?.name)}
       <DocumentEditor 
         file={selectedFile}
         onContentChange={(content) => {
