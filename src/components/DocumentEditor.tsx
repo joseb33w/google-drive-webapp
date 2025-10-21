@@ -185,7 +185,7 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
   }
 
   return (
-    <div className="h-full flex flex-col bg-white max-h-full">
+    <div className="h-full flex flex-col bg-white">
       {/* Toolbar */}
       <div className="border-b border-gray-200 p-4 flex-shrink-0">
         <div className="flex items-center justify-between">
@@ -212,7 +212,7 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
       </div>
 
       {/* Editor */}
-      <div className="flex-1 p-6 bg-white overflow-y-auto min-h-0 max-h-full">
+      <div className="flex-1 p-6 bg-white overflow-y-auto min-h-0">
         <div className="max-w-4xl mx-auto">
           <EditorContent 
             editor={editor} 

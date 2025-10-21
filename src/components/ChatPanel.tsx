@@ -112,9 +112,9 @@ export default function ChatPanel({ selectedFile, chatHistory, onChatUpdate }: C
 
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-white min-h-0">
       {/* Chat header */}
-      <div className="p-4 border-b border-gray-200 bg-white">
+      <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-medium text-gray-900">AI Assistant</h3>
@@ -134,7 +134,7 @@ export default function ChatPanel({ selectedFile, chatHistory, onChatUpdate }: C
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white min-h-0">
         {chatHistory.length === 0 ? (
           <div className="text-center text-gray-500">
             <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
@@ -190,7 +190,7 @@ export default function ChatPanel({ selectedFile, chatHistory, onChatUpdate }: C
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-200 bg-white">
+      <div className="p-4 border-t border-gray-200 bg-white flex-shrink-0">
         <div className="flex space-x-2">
           <textarea
             value={inputMessage}
