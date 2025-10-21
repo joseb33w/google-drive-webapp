@@ -24,6 +24,8 @@ interface Message {
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
+  const [documentContent, setDocumentContent] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
   
   // Panel widths (in percentages)
   const [leftWidth, setLeftWidth] = useState(25);
@@ -93,6 +95,62 @@ export default function Home() {
     setResizeType(type);
   };
 
+  // Load document content when a file is selected
+  const loadDocumentContent = async (file: File) => {
+    if (!file.isGoogleDoc) {
+      setDocumentContent({ error: 'This file type is not supported for editing' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Get Firebase auth token
+      const { getAuth } = await import('firebase/auth');
+      const auth = getAuth();
+      const user = auth.currentUser;
+      
+      if (!user) {
+        setDocumentContent({ error: 'Please sign in to view documents' });
+        return;
+      }
+
+      const idToken = await user.getIdToken();
+      
+      // Call Firebase function to get document content
+      const response = await fetch('https://us-south1-try-mcp-15e08.cloudfunctions.net/googleDriveOperations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          operation: 'get_document',
+          params: {
+            documentId: file.id
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load document');
+      }
+
+      const data = await response.json();
+      setDocumentContent(data.result);
+    } catch (error) {
+      console.error('Error loading document:', error);
+      setDocumentContent({ error: 'Failed to load document content' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle file selection
+  const handleFileSelect = (file: File) => {
+    setSelectedFile(file);
+    loadDocumentContent(file);
+  };
+
   return (
     <div 
       ref={containerRef}
@@ -114,7 +172,7 @@ export default function Home() {
         </div>
         <div className="flex-1 overflow-y-auto min-h-0 bg-white">
           <FileList 
-            onFileSelect={setSelectedFile}
+            onFileSelect={handleFileSelect}
             selectedFile={selectedFile}
           />
         </div>
@@ -139,29 +197,51 @@ export default function Home() {
         <div className="flex-1 overflow-y-auto min-h-0 bg-white p-6">
           {selectedFile ? (
             <div className="max-w-4xl mx-auto">
-              <div className="mb-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Document Content</h3>
-                <p className="text-gray-600 mb-4">This is where the document content will be displayed and edited.</p>
-                <div className="bg-gray-50 p-3 rounded-md text-sm text-gray-700">
-                  <p><strong>Document ID:</strong> {selectedFile.id}</p>
-                  <p><strong>Last Modified:</strong> {new Date(selectedFile.modifiedTime).toLocaleString()}</p>
+              {loading ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading document content...</p>
+                  </div>
                 </div>
-              </div>
-              
-              {/* Add some test content to demonstrate scrolling */}
-              <div className="space-y-4">
-                {Array.from({ length: 30 }, (_, i) => (
-                  <p key={i} className="text-gray-900 leading-relaxed text-base" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-                    This is paragraph {i + 1} of the document content. Lorem ipsum dolor sit amet, 
-                    consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et 
-                    dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation 
-                    ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure 
-                    dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla 
-                    pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui 
-                    officia deserunt mollit anim id est laborum.
-                  </p>
-                ))}
-              </div>
+              ) : documentContent ? (
+                <div>
+                  {documentContent.error ? (
+                    <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                      <p className="text-red-800">{documentContent.error}</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="mb-6">
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">{documentContent.title}</h3>
+                        <div className="bg-gray-50 p-3 rounded-md text-sm text-gray-700">
+                          <p><strong>Document ID:</strong> {documentContent.documentId}</p>
+                          <p><strong>Last Modified:</strong> {new Date(selectedFile.modifiedTime).toLocaleString()}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Display actual document content */}
+                      <div className="prose max-w-none">
+                        {documentContent.content && documentContent.content.length > 0 ? (
+                          documentContent.content.map((item: any, index: number) => (
+                            <p key={index} className="text-gray-900 leading-relaxed text-base mb-4">
+                              {item.text}
+                            </p>
+                          ))
+                        ) : (
+                          <p className="text-gray-500 italic">No content available in this document.</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center">
+                    <p className="text-gray-500">Click on a document to load its content.</p>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex items-center justify-center h-full text-gray-500">
