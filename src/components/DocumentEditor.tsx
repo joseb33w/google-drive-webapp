@@ -22,29 +22,17 @@ interface DocumentEditorProps {
 }
 
 export default function DocumentEditor({ file, onContentChange }: DocumentEditorProps) {
-  console.log('🚨 DocumentEditor component called!', { file: file?.name });
-  
   const [documentContent, setDocumentContent] = useState('');
   const [documentData, setDocumentData] = useState<{title: string; content: Array<{type: string; text?: string}>} | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
-  console.log('🔍 DocumentEditor render:', { 
-    file: file?.name, 
-    documentData: documentData ? 'EXISTS' : 'NULL', 
-    loading, 
-    saving,
-    contentLength: documentData?.content?.length || 0
-  });
-
   // Content change handler removed since we're not using textarea anymore
 
 
   const loadDocumentContent = useCallback(async () => {
-    console.log('🚀 loadDocumentContent called:', { fileId: file?.id, user: user?.uid });
     if (!file?.id || !user) {
-      console.log('❌ Missing file or user, returning early');
       return;
     }
 
@@ -68,13 +56,8 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
       });
 
       const data = await response.json();
-      console.log('📄 API response:', data);
       if (data.result) {
-        // Store the raw document data for better display
-        console.log('✅ Setting documentData:', data.result);
         setDocumentData(data.result);
-      } else {
-        console.log('❌ No result in API response');
       }
     } catch (error) {
       console.error('Error loading document:', error);
@@ -128,7 +111,6 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
 
       const data = await response.json();
       if (data.result) {
-        console.log('Document saved successfully');
       }
     } catch (error) {
       console.error('Error saving document:', error);
@@ -191,67 +173,27 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
       </div>
 
       {/* Document content */}
-      <div style={{ 
-        flex: '1 1 0', 
-        minHeight: '0', 
-        overflowY: 'scroll', 
-        height: '0',
-        border: '3px solid red',
-        backgroundColor: 'yellow',
-        position: 'relative'
-      }}>
-        <div style={{ 
-          position: 'absolute', 
-          top: '0', 
-          left: '0', 
-          right: '0', 
-          bottom: '0',
-          padding: '10px',
-          backgroundColor: 'lightblue'
-        }}>
-          <div style={{ 
-            fontSize: '12px', 
-            color: 'red', 
-            fontWeight: 'bold',
-            marginBottom: '10px'
-          }}>
-            DEBUG: Scrollable area - documentData: {documentData ? 'EXISTS' : 'NULL'}
-          </div>
-          
-          {documentData ? (
-            <div>
-              <div style={{ 
-                fontSize: '12px', 
-                color: 'red', 
-                fontWeight: 'bold',
-                marginBottom: '10px'
-              }}>
-                DEBUG: Content length: {documentData.content?.length || 0} items
+      <div className="flex-1 overflow-y-auto min-h-0 p-4">
+        {documentData ? (
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-6">
+              {documentData.title}
+            </h1>
+            {documentData.content?.map((item: {type: string; text?: string}, index: number) => (
+              <div key={index} className="mb-3">
+                {item.type === 'paragraph' && item.text && (
+                  <p className="text-gray-700 leading-relaxed">
+                    {item.text}
+                  </p>
+                )}
               </div>
-              
-              <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827', marginBottom: '1.5rem' }}>
-                {documentData.title}
-              </h1>
-              {documentData.content?.map((item: {type: string; text?: string}, index: number) => (
-                <div key={index} style={{ marginBottom: '0.75rem' }}>
-                  {item.type === 'paragraph' && item.text && (
-                    <p style={{ color: '#374151', lineHeight: '1.625' }}>
-                      {item.text}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ 
-              fontSize: '14px', 
-              color: 'red', 
-              fontWeight: 'bold'
-            }}>
-              DEBUG: No documentData - this should not be visible
-            </div>
-          )}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-gray-500 text-center mt-8">
+            {loading ? 'Loading document...' : 'No document content available'}
+          </div>
+        )}
       </div>
 
     </div>

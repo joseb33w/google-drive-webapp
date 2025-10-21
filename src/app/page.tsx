@@ -1,33 +1,9 @@
 'use client';
 
 // Main page component for Google Drive web app - Retry deployment
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
-// Suppress jQuery errors that are breaking React rendering
-if (typeof window !== 'undefined') {
-  const originalError = console.error;
-  console.error = (...args) => {
-    const message = args.join(' ');
-    if (message.includes("'*,:x' is not a valid selector")) {
-      // Ignore this specific jQuery error
-      return;
-    }
-    originalError.apply(console, args);
-  };
-
-  // Prevent debugger from pausing on jQuery errors
-  window.addEventListener('error', (event) => {
-    if (event.message && event.message.includes("'*,:x' is not a valid selector")) {
-      event.preventDefault();
-      event.stopPropagation();
-      return false;
-    }
-  });
-}
 import FileList from '@/components/FileList';
-// import DocumentEditor from '@/components/DocumentEditor'; // REMOVED - not working
-
-// console.log('🔍 DocumentEditor imported:', DocumentEditor); // REMOVED
 import ChatPanel from '@/components/ChatPanel';
 
 interface File {
@@ -50,11 +26,6 @@ interface Message {
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
-
-  // Debug log for DocumentEditor rendering
-  useEffect(() => {
-    console.log('🚨 About to render DocumentEditor with file:', selectedFile?.name);
-  }, [selectedFile]);
 
   return (
     <div className="h-screen w-full flex bg-white">
