@@ -74,20 +74,25 @@ export default function DocumentViewer({ selectedFile }: DocumentViewerProps) {
   }, [selectedFile, user]);
 
   return (
-    <div className="flex-1 flex flex-col bg-white min-h-0 overflow-hidden">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200 flex-shrink-0 bg-white">
+    <div className="flex-1 bg-white relative" style={{ height: '100vh' }}>
+      {/* Header - Fixed at top */}
+      <div 
+        className="absolute top-0 left-0 right-0 bg-white border-b border-gray-200 p-4 z-10"
+        style={{ height: '80px' }}
+      >
         <h2 className="text-lg font-semibold text-gray-800">
           {selectedFile ? selectedFile.name : 'No file selected'}
         </h2>
       </div>
       
-      {/* Content Area - Scrollable Container */}
+      {/* Content Area - Scrollable, positioned below header */}
       <div 
-        className="flex-1 overflow-y-auto min-h-0 bg-white p-4"
+        className="absolute left-0 right-0 bg-white p-4"
         style={{
-          height: '0px', // Force flex item to respect container height
-          flex: '1 1 0%'
+          top: '80px',
+          bottom: '0px',
+          overflowY: 'auto',
+          overflowX: 'hidden'
         }}
       >
         {loading ? (
