@@ -25,6 +25,8 @@ interface Message {
     replaceText: string;
     position?: number;
     status: 'pending' | 'accepted' | 'rejected';
+    confidence?: 'high' | 'medium' | 'low';
+    reasoning?: string;
   };
 }
 
@@ -271,6 +273,61 @@ export default function Home() {
     setPendingEdit(null);
   };
 
+  // Smart text matching function
+  const findTextWithFuzzyMatching = (content: DocumentContentItem[], findText: string) => {
+    const matches: Array<{paragraphIndex: number, index: number, length: number, confidence: string}> = [];
+    
+    // Try exact match first
+    content.forEach((item, pIndex) => {
+      if (item.text.includes(findText)) {
+        matches.push({
+          paragraphIndex: pIndex,
+          index: item.text.indexOf(findText),
+          length: findText.length,
+          confidence: 'high'
+        });
+      }
+    });
+    
+    if (matches.length === 1) return matches[0];
+    
+    // Normalize whitespace and try again
+    const normalizedFind = findText.replace(/\s+/g, ' ').trim();
+    content.forEach((item, pIndex) => {
+      const normalized = item.text.replace(/\s+/g, ' ').trim();
+      if (normalized.includes(normalizedFind)) {
+        const index = item.text.indexOf(normalizedFind);
+        matches.push({
+          paragraphIndex: pIndex,
+          index,
+          length: normalizedFind.length,
+          confidence: 'medium'
+        });
+      }
+    });
+    
+    if (matches.length === 1) return matches[0];
+    
+    // Extract core text (remove first/last word which are likely context)
+    const words = normalizedFind.split(' ');
+    if (words.length > 2) {
+      const coreText = words.slice(1, -1).join(' ');
+      content.forEach((item, pIndex) => {
+        if (item.text.includes(coreText)) {
+          matches.push({
+            paragraphIndex: pIndex,
+            index: item.text.indexOf(coreText),
+            length: coreText.length,
+            confidence: 'medium'
+          });
+        }
+      });
+    }
+    
+    // Return best match (first one found, prioritizing higher confidence)
+    return matches.length > 0 ? matches[0] : null;
+  };
+
   // Render document content with diff highlighting
   const renderDocumentContent = (content: DocumentContentItem[]) => {
     if (!content || content.length === 0) {
@@ -286,21 +343,31 @@ export default function Home() {
         return null;
       }
 
-      // If there's a pending edit, check if this text contains the text to be changed
-      if (pendingEdit && item.text.includes(pendingEdit.findText)) {
-        const parts = item.text.split(pendingEdit.findText);
-        return (
-          <p key={index} className="text-gray-900 text-lg leading-relaxed mb-4">
-            {parts[0]}
-            <span className="line-through text-red-600 bg-red-50 px-1 rounded">
-              {pendingEdit.findText}
-            </span>
-            <span className="text-green-600 bg-green-50 font-semibold px-1 rounded">
-              {pendingEdit.replaceText}
-            </span>
-            {parts[1]}
-          </p>
-        );
+      // If there's a pending edit, use smart text matching
+      if (pendingEdit) {
+        const match = findTextWithFuzzyMatching(content, pendingEdit.findText);
+        
+        if (match && match.paragraphIndex === index) {
+          const beforeText = item.text.substring(0, match.index);
+          const matchedText = item.text.substring(match.index, match.index + match.length);
+          const afterText = item.text.substring(match.index + match.length);
+          
+          return (
+            <p key={index} className="text-gray-900 text-lg leading-relaxed mb-4">
+              {beforeText}
+              <span className={`line-through text-red-600 bg-red-50 px-1 rounded ${
+                match.confidence === 'medium' ? 'border-2 border-orange-300' : ''
+              }`}>
+                {matchedText}
+                {match.confidence === 'medium' && <span className="text-xs text-orange-600 ml-1">(fuzzy match)</span>}
+              </span>
+              <span className="text-green-600 bg-green-50 font-semibold px-1 rounded">
+                {pendingEdit.replaceText}
+              </span>
+              {afterText}
+            </p>
+          );
+        }
       }
 
       // Normal rendering without diff

@@ -13,6 +13,8 @@ interface Message {
     replaceText: string;
     position?: number;
     status: 'pending' | 'accepted' | 'rejected';
+    confidence?: 'high' | 'medium' | 'low';
+    reasoning?: string;
   };
 }
 
@@ -228,23 +230,47 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
                   {message.timestamp.toLocaleTimeString()}
                 </p>
                 
-                {/* Accept/Reject buttons for edit proposals */}
-                {message.editProposal && message.editProposal.status === 'pending' && (
-                  <div className="flex gap-2 mt-3">
-                    <button 
-                      onClick={() => onAcceptEdit(message.id)}
-                      className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
-                    >
-                      Accept
-                    </button>
-                    <button 
-                      onClick={() => onRejectEdit(message.id)}
-                      className="px-3 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                )}
+                   {/* Accept/Reject buttons for edit proposals */}
+                   {message.editProposal && message.editProposal.status === 'pending' && (
+                     <div className="mt-3 space-y-2">
+                       {/* Confidence indicator */}
+                       {message.editProposal.confidence && (
+                         <div className="flex items-center gap-2 text-xs">
+                           <span className="text-gray-500">Confidence:</span>
+                           <span className={`px-2 py-1 rounded font-medium ${
+                             message.editProposal.confidence === 'high' ? 'bg-green-100 text-green-800' :
+                             message.editProposal.confidence === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                             'bg-red-100 text-red-800'
+                           }`}>
+                             {message.editProposal.confidence}
+                           </span>
+                         </div>
+                       )}
+                       
+                       {/* Reasoning */}
+                       {message.editProposal.reasoning && (
+                         <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                           <strong>Reasoning:</strong> {message.editProposal.reasoning}
+                         </div>
+                       )}
+                       
+                       {/* Action buttons */}
+                       <div className="flex gap-2">
+                         <button 
+                           onClick={() => onAcceptEdit(message.id)}
+                           className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 flex items-center gap-1"
+                         >
+                           ✓ Accept
+                         </button>
+                         <button 
+                           onClick={() => onRejectEdit(message.id)}
+                           className="px-3 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400 flex items-center gap-1"
+                         >
+                           ✗ Reject
+                         </button>
+                       </div>
+                     </div>
+                   )}
                 
                 {/* Status indicator for accepted/rejected edits */}
                 {message.editProposal && message.editProposal.status !== 'pending' && (

@@ -197,29 +197,28 @@ export const chatHttp = onRequest({
     }
 
     // Build the system prompt
-    let systemPrompt = `You are an AI assistant that helps users edit and work with Google Docs. You can:
-- Help users write, edit, and format documents
-- Suggest improvements to text
-- Answer questions about document content
-- Help with document structure and organization
-- Provide writing assistance and feedback
+    let systemPrompt = `You are an advanced AI editor similar to Cursor. Make precise, contextual edits.
 
-When a user requests an edit to the document, you should return a structured response with both a human-readable message and the specific edit operation. 
+PRECISION REQUIREMENTS:
+- Include 2-3 words of surrounding context before/after target text for unique matching
+- Score confidence: high (unique match), medium (2-3 matches), low (many matches)
+- Provide reasoning explaining your text selection and context awareness
+- Make minimal necessary changes that preserve document flow
+- Analyze document structure before suggesting edits
 
-For edit requests, respond with this JSON format:
+Return JSON format:
 {
-  "response": "Your human-readable response explaining what you'll do",
+  "response": "Brief explanation of what you're changing and why",
   "edit": {
     "type": "replace" | "insert" | "delete",
-    "findText": "exact text to find in the document",
-    "replaceText": "new text to replace with (empty string for deletions)",
-    "position": 0 // optional, for insertions at specific positions
+    "findText": "context before TARGET TEXT context after",
+    "replaceText": "new text",
+    "confidence": "high" | "medium" | "low",
+    "reasoning": "Why this specific text was chosen and how it fits the context"
   }
 }
 
-For non-edit requests (questions, general help), respond normally with just text.
-
-Be helpful, concise, and professional in your responses.`;
+For non-edit requests, respond with plain text.`;
 
     if (documentContext) {
       systemPrompt += `\n\nCurrent document context:
@@ -249,15 +248,20 @@ Be helpful, concise, and professional in your responses.`;
       content: message
     });
 
-    // Call OpenAI API
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: messages,
-      max_tokens: 1000,
-      temperature: 0.7,
+    // Call OpenAI API with GPT-5 Nano using Responses API
+    const completion = await openai.responses.create({
+      model: 'gpt-5-nano-2025-08-07',
+      reasoning: {
+        effort: 'medium'  // for precise text matching decisions
+      },
+      text: {
+        verbosity: 'medium'
+      },
+      max_output_tokens: 1000,
+      input: messages.map(msg => msg.content).join('\n')
     });
 
-    const response = completion.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
+    const response = typeof completion.text === 'string' ? completion.text : 'Sorry, I could not generate a response.';
 
     // Try to parse JSON response for edit proposals
     let parsedResponse;
