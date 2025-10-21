@@ -21,10 +21,22 @@ interface Message {
   timestamp: Date;
 }
 
+interface DocumentContentItem {
+  type: string;
+  text: string;
+}
+
+interface DocumentContent {
+  documentId: string;
+  title: string;
+  content: DocumentContentItem[];
+  error?: string;
+}
+
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
-  const [documentContent, setDocumentContent] = useState<any>(null);
+  const [documentContent, setDocumentContent] = useState<DocumentContent | null>(null);
   const [loading, setLoading] = useState(false);
   
   // Panel widths (in percentages)
@@ -51,7 +63,6 @@ export default function Home() {
         // Resize left panel
         const newLeft = Math.max(15, Math.min(60, newLeftPercent));
         const newMiddle = 100 - newLeft - rightWidth;
-        const newRight = rightWidth;
         
         if (newMiddle >= 20) {
           setLeftWidth(newLeft);
@@ -61,7 +72,6 @@ export default function Home() {
         // Resize right panel
         const newRight = Math.max(15, Math.min(60, ((containerWidth - mouseX) / containerWidth) * 100));
         const newMiddle = 100 - leftWidth - newRight;
-        const newLeft = leftWidth;
         
         if (newMiddle >= 20) {
           setRightWidth(newRight);
@@ -98,7 +108,12 @@ export default function Home() {
   // Load document content when a file is selected
   const loadDocumentContent = async (file: File) => {
     if (!file.isGoogleDoc) {
-      setDocumentContent({ error: 'This file type is not supported for editing' });
+      setDocumentContent({ 
+        documentId: file.id, 
+        title: file.name, 
+        content: [], 
+        error: 'This file type is not supported for editing' 
+      });
       return;
     }
 
@@ -110,7 +125,12 @@ export default function Home() {
       const user = auth.currentUser;
       
       if (!user) {
-        setDocumentContent({ error: 'Please sign in to view documents' });
+        setDocumentContent({ 
+          documentId: file.id, 
+          title: file.name, 
+          content: [], 
+          error: 'Please sign in to view documents' 
+        });
         return;
       }
 
@@ -139,7 +159,12 @@ export default function Home() {
       setDocumentContent(data.result);
     } catch (error) {
       console.error('Error loading document:', error);
-      setDocumentContent({ error: 'Failed to load document content' });
+      setDocumentContent({ 
+        documentId: file.id, 
+        title: file.name, 
+        content: [], 
+        error: 'Failed to load document content' 
+      });
     } finally {
       setLoading(false);
     }
@@ -223,7 +248,7 @@ export default function Home() {
                       {/* Display actual document content */}
                       <div className="prose max-w-none">
                         {documentContent.content && documentContent.content.length > 0 ? (
-                          documentContent.content.map((item: any, index: number) => (
+                          documentContent.content.map((item: DocumentContentItem, index: number) => (
                             <p key={index} className="text-gray-900 leading-relaxed text-base mb-4">
                               {item.text}
                             </p>
