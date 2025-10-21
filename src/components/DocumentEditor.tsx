@@ -189,10 +189,10 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
       </div>
 
       {/* Editor - Content container */}
-      <div className="flex-1 bg-white min-h-0 overflow-y-auto">
+      <div className="flex-1 bg-white min-h-0 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
         <div className="p-6">
           <div className="max-w-2xl mx-auto">
-            <div className="prose prose-lg">
+            <div className="prose prose-lg max-h-full overflow-y-auto">
               {documentData ? (
                 <div className="space-y-4">
                   <h1 className="text-2xl font-bold text-gray-900 mb-6">
@@ -207,6 +207,17 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
                       )}
                     </div>
                   ))}
+                  {/* Force scroll test - add extra content to test scrolling */}
+                  {documentData.content && documentData.content.length > 0 && (
+                    <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+                      <h3 className="text-lg font-semibold mb-2">Document continues...</h3>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <p key={i} className="text-gray-700 mb-2">
+                          This is paragraph {i + 1} to test scrolling functionality. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                        </p>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-12">
