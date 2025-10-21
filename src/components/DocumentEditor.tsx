@@ -23,17 +23,12 @@ interface DocumentEditorProps {
 
 export default function DocumentEditor({ file, onContentChange }: DocumentEditorProps) {
   const [documentContent, setDocumentContent] = useState('');
-  const [documentData, setDocumentData] = useState<any>(null);
+  const [documentData, setDocumentData] = useState<{title: string; content: Array<{type: string; text?: string}>} | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
-  // Simple textarea instead of TipTap editor
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const content = e.target.value;
-    setDocumentContent(content);
-    onContentChange(content);
-  };
+  // Content change handler removed since we're not using textarea anymore
 
 
   const loadDocumentContent = useCallback(async () => {
@@ -203,7 +198,7 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
                   <h1 className="text-2xl font-bold text-gray-900 mb-6">
                     {documentData.title}
                   </h1>
-                  {documentData.content?.map((item: any, index: number) => (
+                  {documentData.content?.map((item: {type: string; text?: string}, index: number) => (
                     <div key={index} className="mb-3">
                       {item.type === 'paragraph' && item.text && (
                         <p className="text-gray-800 leading-relaxed">
@@ -221,7 +216,7 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
                     </svg>
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Document Content</h3>
-                  <p className="text-gray-500">Click "Reload" to load the document content</p>
+                  <p className="text-gray-500">Click &quot;Reload&quot; to load the document content</p>
                 </div>
               )}
             </div>
