@@ -84,6 +84,17 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
     setIsLoading(true);
 
     try {
+      // Get Firebase ID token for authentication
+      const { getAuth } = await import('firebase/auth');
+      const auth = getAuth();
+      const user = auth.currentUser;
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const idToken = await user.getIdToken();
+
       // Send message to OpenAI API
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -97,7 +108,8 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
             name: selectedFile.name,
             content: documentContent.content?.map((item: DocumentContentItem) => item.text).join('\n') || 'No content available'
           } : null,
-          chatHistory: newMessages.slice(-10) // Send last 10 messages for context
+          chatHistory: newMessages.slice(-10), // Send last 10 messages for context
+          idToken: idToken
         }),
       });
 

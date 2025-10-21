@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, documentContext, chatHistory } = await request.json();
+    const { message, documentContext, chatHistory, idToken } = await request.json();
 
     if (!message) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+    }
+
+    if (!idToken) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     // Call Firebase Functions instead of direct OpenAI API
@@ -15,6 +19,7 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}`,
       },
       body: JSON.stringify({
         message,
