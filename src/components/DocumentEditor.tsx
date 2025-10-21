@@ -173,18 +173,44 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
       </div>
 
       {/* Document content */}
-      {documentData && (
-        <div 
-          style={{
-            flex: '1 1 0',
-            minHeight: '0',
-            overflowY: 'scroll',
-            height: '0',
-            border: '1px solid red'
-          }}
-        >
-          <div style={{ padding: '24px' }}>
-            <div style={{ maxWidth: '65ch', margin: '0 auto' }}>
+      <div style={{ 
+        flex: '1 1 0', 
+        minHeight: '0', 
+        overflowY: 'scroll', 
+        height: '0',
+        border: '3px solid red',
+        backgroundColor: 'yellow',
+        position: 'relative'
+      }}>
+        <div style={{ 
+          position: 'absolute', 
+          top: '0', 
+          left: '0', 
+          right: '0', 
+          bottom: '0',
+          padding: '10px',
+          backgroundColor: 'lightblue'
+        }}>
+          <div style={{ 
+            fontSize: '12px', 
+            color: 'red', 
+            fontWeight: 'bold',
+            marginBottom: '10px'
+          }}>
+            DEBUG: Scrollable area - documentData: {documentData ? 'EXISTS' : 'NULL'}
+          </div>
+          
+          {documentData ? (
+            <div>
+              <div style={{ 
+                fontSize: '12px', 
+                color: 'red', 
+                fontWeight: 'bold',
+                marginBottom: '10px'
+              }}>
+                DEBUG: Content length: {documentData.content?.length || 0} items
+              </div>
+              
               <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111827', marginBottom: '1.5rem' }}>
                 {documentData.title}
               </h1>
@@ -198,9 +224,17 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
                 </div>
               ))}
             </div>
-          </div>
+          ) : (
+            <div style={{ 
+              fontSize: '14px', 
+              color: 'red', 
+              fontWeight: 'bold'
+            }}>
+              DEBUG: No documentData - this should not be visible
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
     </div>
   );
