@@ -153,6 +153,27 @@ export const chatHttp = onRequest({
     return;
   }
 
+  // Verify authentication
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Authorization header required' });
+    return;
+  }
+
+  const idToken = authHeader.split('Bearer ')[1];
+  
+  try {
+    // Verify the Firebase ID token
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const uid = decodedToken.uid;
+    console.log('Authenticated user:', uid);
+  } catch (error) {
+    console.error('Authentication error:', error);
+    res.status(401).json({ error: 'Invalid authentication token' });
+    return;
+  }
+
   // Initialize OpenAI with environment variable
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
