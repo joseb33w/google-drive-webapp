@@ -214,7 +214,7 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
       </div>
 
       {/* Editor - Simple scrollable content */}
-      <div className="flex-1 overflow-y-auto bg-white min-h-0">
+      <div className="flex-1 overflow-y-auto bg-white min-h-0" style={{ maxHeight: 'calc(100vh - 200px)' }}>
         <div className="p-6">
           <div className="max-w-4xl mx-auto">
             <EditorContent 
