@@ -139,7 +139,14 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
   }
 
   return (
-    <div className="flex flex-col bg-white h-full">
+    <div className="flex-1 flex flex-col bg-white min-h-0 overflow-hidden">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
+        <h2 className="text-lg font-semibold text-gray-800">
+          {file ? file.name : 'Select a document to edit'}
+        </h2>
+      </div>
+      
       {/* Toolbar */}
       <div className="border-b border-gray-200 p-4 flex-shrink-0 bg-white">
         <div className="flex items-center justify-between">
@@ -160,7 +167,7 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
             </button>
           </div>
           <div className="text-sm text-gray-500">
-            {file.name}
+            {file?.name}
           </div>
         </div>
       </div>
