@@ -130,23 +130,32 @@ export default function Home() {
             {selectedFile ? selectedFile.name : 'Document Editor'}
           </h2>
         </div>
-        <div className="flex-1 overflow-y-auto min-h-0 bg-white p-4">
+        <div className="flex-1 overflow-y-auto min-h-0 bg-white p-6">
           {selectedFile ? (
-            <div className="prose max-w-none">
-              <h3>Document Content</h3>
-              <p>This is where the document content will be displayed and edited.</p>
-              <p>Document ID: {selectedFile.id}</p>
-              <p>Last Modified: {new Date(selectedFile.modifiedTime).toLocaleString()}</p>
+            <div className="max-w-4xl mx-auto">
+              <div className="mb-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Document Content</h3>
+                <p className="text-gray-600 mb-4">This is where the document content will be displayed and edited.</p>
+                <div className="bg-gray-50 p-3 rounded-md text-sm text-gray-700">
+                  <p><strong>Document ID:</strong> {selectedFile.id}</p>
+                  <p><strong>Last Modified:</strong> {new Date(selectedFile.modifiedTime).toLocaleString()}</p>
+                </div>
+              </div>
               
               {/* Add some test content to demonstrate scrolling */}
-              {Array.from({ length: 50 }, (_, i) => (
-                <p key={i}>
-                  This is paragraph {i + 1} of the document content. Lorem ipsum dolor sit amet, 
-                  consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et 
-                  dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation 
-                  ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                </p>
-              ))}
+              <div className="space-y-4">
+                {Array.from({ length: 30 }, (_, i) => (
+                  <p key={i} className="text-gray-900 leading-relaxed text-base">
+                    This is paragraph {i + 1} of the document content. Lorem ipsum dolor sit amet, 
+                    consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et 
+                    dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation 
+                    ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure 
+                    dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla 
+                    pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui 
+                    officia deserunt mollit anim id est laborum.
+                  </p>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="flex items-center justify-center h-full text-gray-500">
