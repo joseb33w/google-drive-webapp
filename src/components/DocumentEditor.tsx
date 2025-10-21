@@ -84,9 +84,8 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
       loadDocumentContent();
     } else {
       setDocumentContent('');
-      editor?.commands.setContent('');
     }
-  }, [file, editor?.commands, loadDocumentContent]);
+  }, [file, loadDocumentContent]);
 
   const saveDocument = async () => {
     if (!file?.id || !documentContent || !user) return;
