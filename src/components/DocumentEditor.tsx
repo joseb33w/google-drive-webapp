@@ -167,7 +167,14 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
 
       {/* Document content */}
       {documentData && (
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div 
+          className="flex-1 min-h-0"
+          style={{
+            overflowY: 'auto',
+            height: '100%',
+            maxHeight: 'calc(100vh - 200px)'
+          }}
+        >
           <div className="p-6">
             <div className="max-w-2xl mx-auto">
               <div className="prose prose-lg">
