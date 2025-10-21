@@ -140,7 +140,8 @@ export const healthCheck = onRequest({
 export const chatHttp = onRequest({ 
   region: 'us-south1',
   timeoutSeconds: 300,
-  memory: '512MiB'
+  memory: '512MiB',
+  invoker: 'public'
 }, async (req, res) => {
   // Set CORS headers
   res.set('Access-Control-Allow-Origin', '*');
