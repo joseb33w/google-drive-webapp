@@ -265,9 +265,9 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white">
       {/* User info and sign out */}
-      <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+      <div className="p-4 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="relative">
@@ -349,7 +349,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
       </div>
 
       {/* File list */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto bg-white">
         {files.length === 0 ? (
           <div className="p-4 text-center text-gray-500">
             {loading ? 'Loading files...' : 'No Google Docs found'}

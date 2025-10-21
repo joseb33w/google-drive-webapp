@@ -30,11 +30,11 @@ export default function Home() {
   return (
     <div className="h-screen flex bg-white">
       {/* Left Panel - File List */}
-      <div className="w-1/4 border-r border-gray-200 bg-white flex flex-col h-full">
+      <div className="w-1/4 border-r border-gray-200 bg-white flex flex-col">
         <div className="p-4 border-b border-gray-200 flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-800">Google Drive Files</h2>
         </div>
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 overflow-y-auto">
           <FileList 
             onFileSelect={setSelectedFile}
             selectedFile={selectedFile}
@@ -43,13 +43,13 @@ export default function Home() {
       </div>
 
       {/* Middle Panel - Document Editor */}
-      <div className="flex-1 flex flex-col bg-white h-full">
+      <div className="flex-1 flex flex-col bg-white">
         <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-800">
             {selectedFile ? selectedFile.name : 'Select a document to edit'}
           </h2>
         </div>
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 overflow-y-auto">
           <DocumentEditor 
             file={selectedFile}
             onContentChange={(content) => {
@@ -61,11 +61,11 @@ export default function Home() {
       </div>
 
       {/* Right Panel - AI Chat */}
-      <div className="w-1/4 border-l border-gray-200 bg-white flex flex-col h-full">
+      <div className="w-1/4 border-l border-gray-200 bg-white flex flex-col">
         <div className="p-4 border-b border-gray-200 flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-800">AI Assistant</h2>
         </div>
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 overflow-y-auto">
           <ChatPanel 
             selectedFile={selectedFile}
             chatHistory={chatHistory}
