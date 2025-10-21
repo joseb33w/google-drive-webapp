@@ -3,7 +3,6 @@
 // Main page component for Google Drive web app - Retry deployment
 import { useState } from 'react';
 import FileList from '@/components/FileList';
-import DocumentViewer from '@/components/DocumentViewer';
 import ChatPanel from '@/components/ChatPanel';
 
 interface File {
@@ -42,8 +41,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Middle Panel - Document Viewer */}
-      <DocumentViewer selectedFile={selectedFile} />
+      {/* Middle Panel - Removed due to rendering issues */}
 
       {/* Right Panel - AI Chat */}
       <div className="w-1/4 border-l border-gray-200 bg-white flex flex-col min-h-0 overflow-hidden">
