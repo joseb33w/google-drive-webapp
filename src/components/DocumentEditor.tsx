@@ -28,11 +28,23 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
   const [saving, setSaving] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
+  console.log('🔍 DocumentEditor render:', { 
+    file: file?.name, 
+    documentData: documentData ? 'EXISTS' : 'NULL', 
+    loading, 
+    saving,
+    contentLength: documentData?.content?.length || 0
+  });
+
   // Content change handler removed since we're not using textarea anymore
 
 
   const loadDocumentContent = useCallback(async () => {
-    if (!file?.id || !user) return;
+    console.log('🚀 loadDocumentContent called:', { fileId: file?.id, user: user?.uid });
+    if (!file?.id || !user) {
+      console.log('❌ Missing file or user, returning early');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -54,9 +66,13 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
       });
 
       const data = await response.json();
+      console.log('📄 API response:', data);
       if (data.result) {
         // Store the raw document data for better display
+        console.log('✅ Setting documentData:', data.result);
         setDocumentData(data.result);
+      } else {
+        console.log('❌ No result in API response');
       }
     } catch (error) {
       console.error('Error loading document:', error);
