@@ -30,67 +30,51 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* FORCE TipTap editor to respect our constraints */
+/* Ensure TipTap editor content is properly constrained */
 .ProseMirror {
-  color: #000000 !important;
-  max-width: 65ch !important; /* Optimal reading line length */
-  margin: 0 auto !important; /* Center the content */
-  width: 100% !important;
-  word-wrap: break-word !important;
-  overflow-wrap: break-word !important;
-  box-sizing: border-box !important;
+  color: #000000;
+  max-width: 65ch;
+  margin: 0 auto;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  box-sizing: border-box;
 }
 
 /* Ensure the editor content area is properly constrained */
 .ProseMirror-focused {
-  outline: none !important;
+  outline: none;
 }
 
-/* Force all paragraphs to respect width constraints */
+/* Proper paragraph styling */
 .ProseMirror p {
-  margin: 0 0 1em 0 !important;
-  max-width: 65ch !important;
-  width: 100% !important;
-  word-wrap: break-word !important;
-  overflow-wrap: break-word !important;
-  box-sizing: border-box !important;
+  margin: 0 0 1em 0;
+  max-width: 65ch;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .ProseMirror p:last-child {
-  margin-bottom: 0 !important;
+  margin-bottom: 0;
 }
 
-/* Force ALL elements to respect width constraints */
+/* Ensure all content respects container bounds */
 .ProseMirror * {
-  max-width: 65ch !important;
-  word-wrap: break-word !important;
-  overflow-wrap: break-word !important;
-  box-sizing: border-box !important;
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  box-sizing: border-box;
 }
 
-/* Force the editor content wrapper */
-.ProseMirror .ProseMirror-content {
-  max-width: 65ch !important;
-  margin: 0 auto !important;
-  width: 100% !important;
+/* Prose styling for better readability */
+.prose {
+  max-width: 65ch;
+  margin: 0 auto;
 }
 
-/* Force the editor root element */
-.ProseMirror-root {
-  max-width: 65ch !important;
-  margin: 0 auto !important;
-  width: 100% !important;
+.prose p {
+  margin-bottom: 1em;
 }
 
-/* Override any TipTap default styles */
-[data-tiptap-editor] {
-  max-width: 65ch !important;
-  margin: 0 auto !important;
-  width: 100% !important;
-}
-
-[data-tiptap-editor] * {
-  max-width: 65ch !important;
-  word-wrap: break-word !important;
-  overflow-wrap: break-word !important;
+.prose p:last-child {
+  margin-bottom: 0;
 }
