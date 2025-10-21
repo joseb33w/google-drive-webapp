@@ -43,7 +43,7 @@ export default function Home() {
       </div>
 
       {/* Middle Panel - Document Editor */}
-      <div className="flex-1 flex flex-col bg-white min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col bg-white min-h-0 overflow-y-auto">
         <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-800">
             {selectedFile ? selectedFile.name : 'Select a document to edit'}
