@@ -56,14 +56,20 @@ async function callOpenAI(messages: any[], systemPrompt: string) {
 async function callClaude(messages: any[], systemPrompt: string) {
   initializeClients();
   
+  // For Claude, we need to include the system prompt in the messages properly
+  const claudeMessages = [
+    { role: 'user', content: `System: ${systemPrompt}` },
+    ...messages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }))
+  ];
+  
   const claudeCompletion = await anthropic.messages.create({
     model: 'claude-sonnet-4-5-20250929',
     max_tokens: 1000,
     temperature: 0.7,
-    messages: messages.map(msg => ({
-      role: msg.role === 'system' ? 'user' : msg.role,
-      content: msg.role === 'system' ? `System: ${msg.content}` : msg.content
-    }))
+    messages: claudeMessages
   });
   
   return claudeCompletion.content[0]?.type === 'text' ? claudeCompletion.content[0].text : 'Sorry, I could not generate a response.';
@@ -82,13 +88,16 @@ async function callGemini(messages: any[], systemPrompt: string) {
 
 // Main AI model router function
 async function callAIModel(model: string, messages: any[], systemPrompt: string) {
+  // Remove the system message from messages since we'll add it in each function
+  const userMessages = messages.filter(msg => msg.role !== 'system');
+  
   switch (model) {
     case 'gpt-5-chat-latest':
-      return await callOpenAI(messages, systemPrompt);
+      return await callOpenAI(userMessages, systemPrompt);
     case 'claude-4.5-sonnet':
-      return await callClaude(messages, systemPrompt);
+      return await callClaude(userMessages, systemPrompt);
     case 'gemini-2.5-pro':
-      return await callGemini(messages, systemPrompt);
+      return await callGemini(userMessages, systemPrompt);
     default:
       throw new Error(`Unsupported model: ${model}`);
   }
