@@ -26,12 +26,31 @@ interface File {
   isGoogleDoc: boolean;
 }
 
+interface DocumentContentItem {
+  type: string;
+  text: string;
+}
+
+interface DocumentContent {
+  documentId: string;
+  title: string;
+  content: DocumentContentItem[];
+  error?: string;
+}
+
+interface EditProposal {
+  messageId: string;
+  type: string;
+  findText: string;
+  replaceText: string;
+}
+
 interface ChatPanelProps {
   selectedFile: File | null;
-  documentContent: any;
+  documentContent: DocumentContent | null;
   chatHistory: Message[];
   onChatUpdate: (messages: Message[]) => void;
-  onEditProposal: (edit: any) => void;
+  onEditProposal: (edit: EditProposal) => void;
   onAcceptEdit: (messageId: string) => void;
   onRejectEdit: (messageId: string) => void;
 }
@@ -76,7 +95,7 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
           documentContext: selectedFile && documentContent ? {
             id: selectedFile.id,
             name: selectedFile.name,
-            content: documentContent.content?.map((item: any) => item.text).join('\n') || 'No content available'
+            content: documentContent.content?.map((item: DocumentContentItem) => item.text).join('\n') || 'No content available'
           } : null,
           chatHistory: newMessages.slice(-10) // Send last 10 messages for context
         }),
