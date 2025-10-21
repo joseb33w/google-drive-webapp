@@ -41,7 +41,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Middle Panel - Removed due to rendering issues */}
+      {/* Middle Panel - COMPLETELY REMOVED */}
 
       {/* Right Panel - AI Chat */}
       <div className="w-1/4 border-l border-gray-200 bg-white flex flex-col min-h-0 overflow-hidden">
