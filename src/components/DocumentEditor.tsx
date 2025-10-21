@@ -214,10 +214,10 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
       </div>
 
       {/* Editor - Content container */}
-      <div className="flex-1 bg-white min-h-0">
+      <div className="flex-1 bg-white min-h-0 overflow-y-auto">
         <div className="p-6">
           <div className="max-w-2xl mx-auto">
-            <div className="prose prose-lg max-w-none">
+            <div className="prose prose-lg">
               <EditorContent 
                 editor={editor} 
                 className="focus:outline-none"
