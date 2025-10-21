@@ -43,13 +43,13 @@ export default function Home() {
       </div>
 
       {/* Middle Panel - Document Editor */}
-      <div className="flex-1 flex flex-col bg-white min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col bg-white min-h-0 overflow-hidden" style={{ height: '100vh' }}>
         <div className="p-4 border-b border-gray-200 flex-shrink-0 bg-white">
           <h2 className="text-lg font-semibold text-gray-800">
             {selectedFile ? selectedFile.name : 'No file selected'}
           </h2>
         </div>
-        <div className="flex-1 overflow-y-auto min-h-0 bg-white p-4">
+        <div className="flex-1 overflow-y-auto min-h-0 bg-white p-4" style={{ maxHeight: 'calc(100vh - 120px)' }}>
           {selectedFile ? (
             <div className="prose max-w-none">
               <p>Document content will be loaded here...</p>
