@@ -180,7 +180,8 @@ export const chatHttp = onRequest({
     apiKey: process.env.OPENAI_API_KEY,
   });
   
-  console.log('OpenAI client initialized successfully');
+  // Log successful initialization for debugging
+  console.log('OpenAI client initialized successfully with updated API key');
 
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
