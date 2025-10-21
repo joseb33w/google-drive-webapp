@@ -179,6 +179,21 @@ export const chatHttp = onRequest({
 - Help with document structure and organization
 - Provide writing assistance and feedback
 
+When a user requests an edit to the document, you should return a structured response with both a human-readable message and the specific edit operation. 
+
+For edit requests, respond with this JSON format:
+{
+  "response": "Your human-readable response explaining what you'll do",
+  "edit": {
+    "type": "replace" | "insert" | "delete",
+    "findText": "exact text to find in the document",
+    "replaceText": "new text to replace with (empty string for deletions)",
+    "position": 0 // optional, for insertions at specific positions
+  }
+}
+
+For non-edit requests (questions, general help), respond normally with just text.
+
 Be helpful, concise, and professional in your responses.`;
 
     if (documentContext) {
@@ -219,6 +234,20 @@ Be helpful, concise, and professional in your responses.`;
 
     const response = completion.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
 
+    // Try to parse JSON response for edit proposals
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(response);
+      // If it's a valid JSON with edit structure, return it
+      if (parsedResponse.response && parsedResponse.edit) {
+        res.json(parsedResponse);
+        return;
+      }
+    } catch (e) {
+      // Not JSON, continue with normal text response
+    }
+
+    // Return normal text response
     res.json({ response });
 
   } catch (error) {
@@ -442,6 +471,52 @@ export const googleDriveOperations = onRequest({
           documentId: response.data.documentId,
           title: response.data.title,
           url: `https://docs.google.com/document/d/${response.data.documentId}/edit`
+        };
+        break;
+      }
+
+      case 'insert_text': {
+        // Insert text at specific position
+        const requests = [{
+          insertText: {
+            location: {
+              index: params.position || 1
+            },
+            text: params.text
+          }
+        }];
+        
+        await docs.documents.batchUpdate({
+          documentId: params.documentId,
+          requestBody: { requests }
+        });
+        
+        result = { 
+          documentId: params.documentId, 
+          message: 'Text inserted successfully' 
+        };
+        break;
+      }
+
+      case 'delete_text': {
+        // Delete specific text
+        const requests = [{
+          deleteContentRange: {
+            range: {
+              startIndex: params.startIndex || 1,
+              endIndex: params.endIndex || 2
+            }
+          }
+        }];
+        
+        await docs.documents.batchUpdate({
+          documentId: params.documentId,
+          requestBody: { requests }
+        });
+        
+        result = { 
+          documentId: params.documentId, 
+          message: 'Text deleted successfully' 
         };
         break;
       }

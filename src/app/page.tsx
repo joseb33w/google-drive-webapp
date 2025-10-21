@@ -19,6 +19,13 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  editProposal?: {
+    type: 'replace' | 'insert' | 'delete';
+    findText: string;
+    replaceText: string;
+    position?: number;
+    status: 'pending' | 'accepted' | 'rejected';
+  };
 }
 
 interface DocumentContentItem {
@@ -38,6 +45,12 @@ export default function Home() {
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
   const [documentContent, setDocumentContent] = useState<DocumentContent | null>(null);
   const [loading, setLoading] = useState(false);
+  const [pendingEdit, setPendingEdit] = useState<{
+    messageId: string;
+    type: string;
+    findText: string;
+    replaceText: string;
+  } | null>(null);
   
   // Panel widths (in percentages)
   const [leftWidth, setLeftWidth] = useState(25);
@@ -188,6 +201,117 @@ export default function Home() {
     loadDocumentContent(file);
   };
 
+  // Handle accepting an edit
+  const handleAcceptEdit = async (messageId: string) => {
+    const message = chatHistory.find(m => m.id === messageId);
+    if (!message || !message.editProposal) return;
+
+    try {
+      // Get Firebase auth token
+      const { getAuth } = await import('firebase/auth');
+      const auth = getAuth();
+      const user = auth.currentUser;
+      
+      if (!user || !selectedFile) return;
+
+      const idToken = await user.getIdToken();
+      
+      // Call Firebase function to apply the edit
+      const response = await fetch('https://us-south1-try-mcp-15e08.cloudfunctions.net/googleDriveOperations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          operation: 'replace_text',
+          params: {
+            documentId: selectedFile.id,
+            findText: message.editProposal.findText,
+            replaceWithText: message.editProposal.replaceText
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to apply edit');
+      }
+
+      // Update message status to accepted
+      const updatedMessages = chatHistory.map(m => 
+        m.id === messageId 
+          ? { ...m, editProposal: { ...m.editProposal!, status: 'accepted' as const } }
+          : m
+      );
+      setChatHistory(updatedMessages);
+
+      // Clear pending edit
+      setPendingEdit(null);
+
+      // Reload document content to show the changes
+      if (selectedFile) {
+        loadDocumentContent(selectedFile);
+      }
+    } catch (error) {
+      console.error('Error accepting edit:', error);
+    }
+  };
+
+  // Handle rejecting an edit
+  const handleRejectEdit = (messageId: string) => {
+    // Update message status to rejected
+    const updatedMessages = chatHistory.map(m => 
+      m.id === messageId 
+        ? { ...m, editProposal: { ...m.editProposal!, status: 'rejected' as const } }
+        : m
+    );
+    setChatHistory(updatedMessages);
+
+    // Clear pending edit
+    setPendingEdit(null);
+  };
+
+  // Render document content with diff highlighting
+  const renderDocumentContent = (content: DocumentContentItem[]) => {
+    if (!content || content.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">This document appears to be empty.</p>
+        </div>
+      );
+    }
+
+    return content.map((item: DocumentContentItem, index: number) => {
+      if (!item.text || !item.text.trim()) {
+        return null;
+      }
+
+      // If there's a pending edit, check if this text contains the text to be changed
+      if (pendingEdit && item.text.includes(pendingEdit.findText)) {
+        const parts = item.text.split(pendingEdit.findText);
+        return (
+          <p key={index} className="text-gray-900 text-lg leading-relaxed mb-4">
+            {parts[0]}
+            <span className="line-through text-red-600 bg-red-50 px-1 rounded">
+              {pendingEdit.findText}
+            </span>
+            <span className="text-green-600 bg-green-50 font-semibold px-1 rounded">
+              {pendingEdit.replaceText}
+            </span>
+            {parts[1]}
+          </p>
+        );
+      }
+
+      // Normal rendering without diff
+      return (
+        <p key={index} className="text-gray-900 text-lg leading-relaxed mb-4">
+          {item.text}
+        </p>
+      );
+    });
+  };
+
   return (
     <div 
       ref={containerRef}
@@ -250,22 +374,7 @@ export default function Home() {
                   ) : (
                     <div className="prose prose-lg max-w-none">
                       <h1 className="text-3xl font-bold text-gray-900 mb-8">{documentContent.title}</h1>
-                      {documentContent.content && documentContent.content.length > 0 ? (
-                        documentContent.content.map((item: DocumentContentItem, index: number) => {
-                          if (item.text && item.text.trim()) {
-                            return (
-                              <p key={index} className="text-gray-900 text-lg leading-relaxed mb-4">
-                                {item.text}
-                              </p>
-                            );
-                          }
-                          return null;
-                        })
-                      ) : (
-                        <div className="text-center py-12">
-                          <p className="text-gray-500 text-lg">This document appears to be empty.</p>
-                        </div>
-                      )}
+                      {renderDocumentContent(documentContent.content)}
                     </div>
                   )}
                 </div>
@@ -302,8 +411,12 @@ export default function Home() {
         <div className="flex-1 overflow-y-auto min-h-0 bg-white">
           <ChatPanel 
             selectedFile={selectedFile}
+            documentContent={documentContent}
             chatHistory={chatHistory}
             onChatUpdate={setChatHistory}
+            onEditProposal={setPendingEdit}
+            onAcceptEdit={handleAcceptEdit}
+            onRejectEdit={handleRejectEdit}
           />
         </div>
       </div>

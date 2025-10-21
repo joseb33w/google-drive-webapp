@@ -7,6 +7,13 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  editProposal?: {
+    type: 'replace' | 'insert' | 'delete';
+    findText: string;
+    replaceText: string;
+    position?: number;
+    status: 'pending' | 'accepted' | 'rejected';
+  };
 }
 
 interface File {
@@ -21,11 +28,15 @@ interface File {
 
 interface ChatPanelProps {
   selectedFile: File | null;
+  documentContent: any;
   chatHistory: Message[];
   onChatUpdate: (messages: Message[]) => void;
+  onEditProposal: (edit: any) => void;
+  onAcceptEdit: (messageId: string) => void;
+  onRejectEdit: (messageId: string) => void;
 }
 
-export default function ChatPanel({ selectedFile, chatHistory, onChatUpdate }: ChatPanelProps) {
+export default function ChatPanel({ selectedFile, documentContent, chatHistory, onChatUpdate, onEditProposal, onAcceptEdit, onRejectEdit }: ChatPanelProps) {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -62,10 +73,10 @@ export default function ChatPanel({ selectedFile, chatHistory, onChatUpdate }: C
         },
         body: JSON.stringify({
           message: inputMessage,
-          documentContext: selectedFile ? {
+          documentContext: selectedFile && documentContent ? {
             id: selectedFile.id,
             name: selectedFile.name,
-            content: 'Document content would be here' // In real implementation, get actual content
+            content: documentContent.content?.map((item: any) => item.text).join('\n') || 'No content available'
           } : null,
           chatHistory: newMessages.slice(-10) // Send last 10 messages for context
         }),
@@ -83,6 +94,25 @@ export default function ChatPanel({ selectedFile, chatHistory, onChatUpdate }: C
         content: data.response,
         timestamp: new Date(),
       };
+
+      // Check if this is an edit proposal
+      if (data.edit) {
+        assistantMessage.editProposal = {
+          type: data.edit.type,
+          findText: data.edit.findText,
+          replaceText: data.edit.replaceText,
+          position: data.edit.position,
+          status: 'pending'
+        };
+        
+        // Notify parent component about the edit proposal
+        onEditProposal({
+          messageId: assistantMessage.id,
+          type: data.edit.type,
+          findText: data.edit.findText,
+          replaceText: data.edit.replaceText
+        });
+      }
 
       onChatUpdate([...newMessages, assistantMessage]);
     } catch (error) {
@@ -166,6 +196,37 @@ export default function ChatPanel({ selectedFile, chatHistory, onChatUpdate }: C
                 }`}>
                   {message.timestamp.toLocaleTimeString()}
                 </p>
+                
+                {/* Accept/Reject buttons for edit proposals */}
+                {message.editProposal && message.editProposal.status === 'pending' && (
+                  <div className="flex gap-2 mt-3">
+                    <button 
+                      onClick={() => onAcceptEdit(message.id)}
+                      className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                    >
+                      Accept
+                    </button>
+                    <button 
+                      onClick={() => onRejectEdit(message.id)}
+                      className="px-3 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                )}
+                
+                {/* Status indicator for accepted/rejected edits */}
+                {message.editProposal && message.editProposal.status !== 'pending' && (
+                  <div className="mt-2">
+                    <span className={`text-xs px-2 py-1 rounded ${
+                      message.editProposal.status === 'accepted' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {message.editProposal.status === 'accepted' ? '✓ Accepted' : '✗ Rejected'}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           ))
