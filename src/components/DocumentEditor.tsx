@@ -225,7 +225,9 @@ export default function DocumentEditor({ file, onContentChange }: DocumentEditor
                   color: '#000000',
                   backgroundColor: 'white',
                   fontSize: '16px',
-                  lineHeight: '1.6'
+                  lineHeight: '1.6',
+                  maxHeight: '100%',
+                  overflow: 'hidden'
                 }}
               />
             </div>
