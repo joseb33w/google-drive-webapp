@@ -267,7 +267,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
     } finally {
       setLoading(false);
     }
-  }, [user, addToast]); // Removed sessionId dependency
+  }, [user, addToast, lastRequestTime]); // Added lastRequestTime dependency
 
   // No longer needed - Firebase Auth handles Google Drive access
 
