@@ -3,44 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import FileList from '@/components/FileList';
 import ChatPanel from '@/components/ChatPanel';
-
-interface File {
-  id: string;
-  name: string;
-  mimeType: string;
-  createdTime: string;
-  modifiedTime: string;
-  webViewLink: string;
-  isGoogleDoc: boolean;
-}
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  editProposal?: {
-    type: 'replace' | 'insert' | 'delete';
-    findText: string;
-    replaceText: string;
-    position?: number;
-    status: 'pending' | 'accepted' | 'rejected';
-    confidence?: 'high' | 'medium' | 'low';
-    reasoning?: string;
-  };
-}
-
-interface DocumentContentItem {
-  type: string;
-  text: string;
-}
-
-interface DocumentContent {
-  documentId: string;
-  title: string;
-  content: DocumentContentItem[];
-  error?: string;
-}
+import { File, Message, DocumentContent, DocumentContentItem } from '@/types';
+import { FIREBASE_FUNCTIONS } from '@/lib/config';
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -156,7 +120,7 @@ export default function Home() {
       const idToken = await user.getIdToken();
       
       // Call Firebase function to get document content
-      const response = await fetch('https://us-south1-try-mcp-15e08.cloudfunctions.net/googleDriveOperations', {
+      const response = await fetch(FIREBASE_FUNCTIONS.googleDriveOperations, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -222,7 +186,7 @@ export default function Home() {
       const idToken = await user.getIdToken();
       
       // Call Firebase function to apply the edit
-      const response = await fetch('https://us-south1-try-mcp-15e08.cloudfunctions.net/googleDriveOperations', {
+      const response = await fetch(FIREBASE_FUNCTIONS.googleDriveOperations, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

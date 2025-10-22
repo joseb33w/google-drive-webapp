@@ -1,44 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  editProposal?: {
-    type: 'replace' | 'insert' | 'delete';
-    findText: string;
-    replaceText: string;
-    position?: number;
-    status: 'pending' | 'accepted' | 'rejected';
-    confidence?: 'high' | 'medium' | 'low';
-    reasoning?: string;
-  };
-}
-
-interface File {
-  id: string;
-  name: string;
-  mimeType: string;
-  createdTime: string;
-  modifiedTime: string;
-  webViewLink: string;
-  isGoogleDoc: boolean;
-}
-
-interface DocumentContentItem {
-  type: string;
-  text: string;
-}
-
-interface DocumentContent {
-  documentId: string;
-  title: string;
-  content: DocumentContentItem[];
-  error?: string;
-}
+import { File, Message, DocumentContent, DocumentContentItem } from '@/types';
 
 interface EditProposal {
   messageId: string;

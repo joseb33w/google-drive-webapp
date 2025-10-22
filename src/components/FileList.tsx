@@ -5,16 +5,8 @@ import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from
 import { auth, functions } from '@/lib/firebase';
 import Image from 'next/image';
 import { httpsCallable } from 'firebase/functions';
-
-interface File {
-  id: string;
-  name: string;
-  mimeType: string;
-  createdTime: string;
-  modifiedTime: string;
-  webViewLink: string;
-  isGoogleDoc: boolean;
-}
+import { File, AuthUser } from '@/types';
+import { FIREBASE_FUNCTIONS, getGoogleClientId } from '@/lib/config';
 
 interface FileListProps {
   onFileSelect: (file: File) => void;
@@ -25,7 +17,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [needsOAuth, setNeedsOAuth] = useState(false);
-  const [user, setUser] = useState<{displayName: string | null; email: string | null; photoURL: string | null; getIdToken: () => Promise<string>} | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
   // Handle Google Sign-In with Google Drive scopes
@@ -75,7 +67,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
   const handleGoogleDriveAuth = async () => {
     try {
       // Create OAuth URL for Google Drive access
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '224471734463-qsg132uar0273ruua83rh4ibb8uj4ro2.apps.googleusercontent.com';
+      const clientId = getGoogleClientId();
       const redirectUri = encodeURIComponent(window.location.origin);
       const scope = encodeURIComponent([
         'https://www.googleapis.com/auth/drive',
@@ -123,7 +115,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
       
       // Exchange authorization code for tokens
       const idToken = await user.getIdToken();
-      const response = await fetch('https://us-south1-try-mcp-15e08.cloudfunctions.net/exchangeOAuthCode', {
+      const response = await fetch(FIREBASE_FUNCTIONS.exchangeOAuthCode, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -172,7 +164,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
       const idToken = await user.getIdToken();
       
       // Call Firebase Functions directly (no more Railway proxy)
-      const response = await fetch('https://us-south1-try-mcp-15e08.cloudfunctions.net/googleDriveOperations', {
+      const response = await fetch(FIREBASE_FUNCTIONS.googleDriveOperations, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

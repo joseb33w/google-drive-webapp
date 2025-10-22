@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { FIREBASE_FUNCTIONS } from '@/lib/config';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call Firebase Functions instead of direct OpenAI API
-    const firebaseFunctionUrl = 'https://us-south1-try-mcp-15e08.cloudfunctions.net/chatHttp';
+    const firebaseFunctionUrl = FIREBASE_FUNCTIONS.chatHttp;
     
     const response = await fetch(firebaseFunctionUrl, {
       method: 'POST',
