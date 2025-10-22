@@ -26,9 +26,10 @@ export interface DocumentContent {
 }
 
 export interface EditProposal {
-  type: 'replace' | 'insert' | 'delete';
-  findText: string;
-  replaceText: string;
+  type: 'replace' | 'insert' | 'delete' | 'rewrite';
+  findText?: string;
+  replaceText?: string;
+  newContent?: string; // For complete document rewrites
   position?: number;
   status: 'pending' | 'accepted' | 'rejected';
   confidence?: 'high' | 'medium' | 'low';

@@ -398,13 +398,31 @@ export const chatHttp = onRequest({
     }
 
     // Build the system prompt
-    let systemPrompt = `You are an advanced AI editor similar to Cursor. Make precise, contextual edits.
+    let systemPrompt = `You are an advanced AI editor similar to Cursor with FULL document editing capabilities.
+
+EDITING CAPABILITIES:
+You can perform ANY of these operations on the document:
+- "replace": Find and replace specific text (for small targeted changes)
+- "insert": Add new text at a specific location
+- "delete": Remove specific text
+- "rewrite": COMPLETELY REWRITE the entire document (for major restructuring or full rewrites)
+
+WHEN TO USE EACH TYPE:
+- Use "replace" for small, targeted changes to existing text
+- Use "insert" to add new content at the end or middle of document
+- Use "delete" to remove specific sections
+- Use "rewrite" when you need to:
+  * Completely restructure the document
+  * Rewrite the entire document from scratch
+  * Make major organizational changes
+  * Change the document's overall structure or flow
+  * Transform the document's format or style completely
 
 PRECISION REQUIREMENTS:
-- Include 2-3 words of surrounding context before/after target text for unique matching
+- For "replace" edits: Include 2-3 words of surrounding context for unique matching
+- For "rewrite" edits: Provide the COMPLETE new document content
 - Score confidence: high (unique match), medium (2-3 matches), low (many matches)
-- Provide reasoning explaining your text selection and context awareness
-- Make minimal necessary changes that preserve document flow
+- Provide reasoning explaining your approach
 - Analyze document structure before suggesting edits
 
 CRITICAL CONTENT REQUIREMENTS:
@@ -433,7 +451,7 @@ JSON VALIDATION CHECKLIST:
 6. No trailing commas before } or ]
 7. The entire response is valid JSON
 
-Return JSON format:
+Return JSON format for TARGETED EDITS (replace/insert/delete):
 {
   "response": "Brief explanation of what you're changing and why",
   "edit": {
@@ -442,6 +460,17 @@ Return JSON format:
     "replaceText": "new text",
     "confidence": "high" | "medium" | "low",
     "reasoning": "Why this specific text was chosen and how it fits the context"
+  }
+}
+
+Return JSON format for COMPLETE REWRITES:
+{
+  "response": "Brief explanation of what you're changing and why",
+  "edit": {
+    "type": "rewrite",
+    "newContent": "THE COMPLETE NEW DOCUMENT CONTENT WITH ALL TEXT",
+    "confidence": "high",
+    "reasoning": "Why a complete rewrite is needed and how it improves the document"
   }
 }
 
@@ -817,6 +846,52 @@ export const googleDriveOperations = onRequest({
         result = { 
           documentId: params.documentId, 
           message: 'Text deleted successfully' 
+        };
+        break;
+      }
+
+      case 'rewrite_document': {
+        // Complete document rewrite - delete all content and insert new content
+        const doc = await docs.documents.get({
+          documentId: params.documentId
+        });
+        
+        // Get the full document length (end index)
+        const endIndex = doc.data.body?.content?.reduce((max: number, item: any) => {
+          if (item.endIndex && item.endIndex > max) {
+            return item.endIndex;
+          }
+          return max;
+        }, 1) || 1;
+        
+        // Create batch update: delete all content, then insert new content
+        const requests = [
+          {
+            deleteContentRange: {
+              range: {
+                startIndex: 1,
+                endIndex: endIndex - 1 // Don't delete the final newline
+              }
+            }
+          },
+          {
+            insertText: {
+              location: {
+                index: 1
+              },
+              text: params.newContent
+            }
+          }
+        ];
+        
+        await docs.documents.batchUpdate({
+          documentId: params.documentId,
+          requestBody: { requests }
+        });
+        
+        result = { 
+          documentId: params.documentId, 
+          message: 'Document rewritten successfully' 
         };
         break;
       }

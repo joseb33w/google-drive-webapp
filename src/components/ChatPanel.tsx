@@ -103,7 +103,10 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
           type: data.edit.type,
           findText: data.edit.findText,
           replaceText: data.edit.replaceText,
+          newContent: data.edit.newContent, // For rewrite operations
           position: data.edit.position,
+          confidence: data.edit.confidence,
+          reasoning: data.edit.reasoning,
           status: 'pending'
         };
         
@@ -225,6 +228,22 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
                    {/* Accept/Reject buttons for edit proposals */}
                    {message.editProposal && message.editProposal.status === 'pending' && (
                      <div className="mt-3 space-y-2">
+                       {/* Edit Type Indicator */}
+                       <div className="flex items-center gap-2 text-xs">
+                         <span className="text-gray-500">Edit Type:</span>
+                         <span className={`px-2 py-1 rounded font-medium ${
+                           message.editProposal.type === 'rewrite' ? 'bg-purple-100 text-purple-800' :
+                           message.editProposal.type === 'replace' ? 'bg-blue-100 text-blue-800' :
+                           message.editProposal.type === 'insert' ? 'bg-green-100 text-green-800' :
+                           'bg-red-100 text-red-800'
+                         }`}>
+                           {message.editProposal.type === 'rewrite' ? '🔄 Complete Rewrite' :
+                            message.editProposal.type === 'replace' ? '✏️ Replace' :
+                            message.editProposal.type === 'insert' ? '➕ Insert' :
+                            '🗑️ Delete'}
+                         </span>
+                       </div>
+                       
                        {/* Confidence indicator */}
                        {message.editProposal.confidence && (
                          <div className="flex items-center gap-2 text-xs">

@@ -193,6 +193,44 @@ export default function Home() {
 
       const idToken = await user.getIdToken();
       
+      // Determine operation and params based on edit type
+      let operation: string;
+      let params: any;
+      
+      switch (message.editProposal.type) {
+        case 'rewrite':
+          operation = 'rewrite_document';
+          params = {
+            documentId: selectedFile.id,
+            newContent: message.editProposal.newContent
+          };
+          break;
+        case 'insert':
+          operation = 'insert_text';
+          params = {
+            documentId: selectedFile.id,
+            text: message.editProposal.replaceText,
+            position: message.editProposal.position || 1
+          };
+          break;
+        case 'delete':
+          operation = 'delete_text';
+          params = {
+            documentId: selectedFile.id,
+            findText: message.editProposal.findText
+          };
+          break;
+        case 'replace':
+        default:
+          operation = 'replace_text';
+          params = {
+            documentId: selectedFile.id,
+            findText: message.editProposal.findText,
+            replaceWithText: message.editProposal.replaceText
+          };
+          break;
+      }
+      
       // Call Firebase function to apply the edit
       const response = await fetch(FIREBASE_FUNCTIONS.googleDriveOperations, {
         method: 'POST',
@@ -201,12 +239,8 @@ export default function Home() {
           'Authorization': `Bearer ${idToken}`,
         },
         body: JSON.stringify({
-          operation: 'replace_text',
-          params: {
-            documentId: selectedFile.id,
-            findText: message.editProposal.findText,
-            replaceWithText: message.editProposal.replaceText
-          }
+          operation,
+          params
         })
       });
 
