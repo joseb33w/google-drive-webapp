@@ -1,15 +1,12 @@
 'use client';
 
-import { useState, useRef, useEffect, memo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import FileList from '@/components/FileList';
 import ChatPanel from '@/components/ChatPanel';
 import { File, Message, DocumentContent, DocumentContentItem } from '@/types';
 import { FIREBASE_FUNCTIONS } from '@/lib/config';
 import { ErrorToast, useErrorToast } from '@/components/ErrorToast';
 
-// Memoized components to prevent unnecessary re-renders
-const MemoizedFileList = memo(FileList);
-const MemoizedChatPanel = memo(ChatPanel);
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -421,7 +418,7 @@ export default function Home() {
           <h2 className="text-lg font-semibold text-gray-800">Files</h2>
         </div>
         <div className="flex-1 overflow-y-auto min-h-0 bg-white">
-          <MemoizedFileList 
+          <FileList 
             onFileSelect={handleFileSelect}
             selectedFile={selectedFile}
           />
@@ -504,7 +501,7 @@ export default function Home() {
           <h2 className="text-lg font-semibold text-gray-800">AI Assistant</h2>
         </div>
         <div className="flex-1 overflow-y-auto min-h-0 bg-white">
-          <MemoizedChatPanel 
+          <ChatPanel 
             selectedFile={selectedFile}
             documentContent={documentContent}
             chatHistory={chatHistory}
