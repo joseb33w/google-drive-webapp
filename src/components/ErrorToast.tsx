@@ -21,7 +21,8 @@ export function ErrorToast({
     if (duration > 0) {
       const timer = setTimeout(() => {
         setIsVisible(false);
-        setTimeout(onClose, 300); // Wait for animation to complete
+        // Call onClose immediately for auto-dismiss too
+        onClose();
       }, duration);
 
       return () => clearTimeout(timer);
@@ -30,7 +31,8 @@ export function ErrorToast({
 
   const handleClose = () => {
     setIsVisible(false);
-    setTimeout(onClose, 300); // Wait for animation to complete
+    // Call onClose immediately, don't wait for animation
+    onClose();
   };
 
   const getToastStyles = () => {

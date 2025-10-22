@@ -186,22 +186,45 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
 
       const data = await response.json();
       
-      if (data.result) {
-        setFiles(data.result.files || []);
+      // Check if the response contains a result (success case)
+      if (data.result && data.result.files) {
+        setFiles(data.result.files);
         setNeedsOAuth(false);
-      } else {
+        console.log('Files loaded successfully:', data.result.files.length);
+      } else if (data.error) {
+        // Only show error if there's actually an error message
         console.error('Error loading files:', data.error);
-        const errorMessage = data.error || 'Failed to load files from Google Drive';
+        const errorMessage = data.error;
         addToast(`Failed to load files: ${errorMessage}`, 'error');
-        if (data.error?.includes('OAuth tokens not found') || data.needsAuth) {
+        if (data.error.includes('OAuth tokens not found') || data.needsAuth) {
           setNeedsOAuth(true);
         }
+        setFiles([]);
+      } else {
+        // Fallback case - no result and no error
+        console.warn('Unexpected response format:', data);
         setFiles([]);
       }
     } catch (error) {
       console.error('Error loading files:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load files from Google Drive';
-      addToast(`Failed to load files: ${errorMessage}`, 'error');
+      
+      // Handle different types of errors more specifically
+      let errorMessage = 'Failed to load files from Google Drive';
+      let errorType: 'error' | 'warning' = 'error';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+          errorType = 'warning';
+        } else if (error.message.includes('User not authenticated')) {
+          errorMessage = 'Please sign in to access your Google Drive files.';
+          errorType = 'warning';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      addToast(`Failed to load files: ${errorMessage}`, errorType);
       setNeedsOAuth(true);
       setFiles([]);
     } finally {
