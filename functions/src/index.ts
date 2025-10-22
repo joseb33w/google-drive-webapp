@@ -88,16 +88,13 @@ async function callGemini(messages: any[], systemPrompt: string) {
 
 // Main AI model router function
 async function callAIModel(model: string, messages: any[], systemPrompt: string) {
-  // Remove the system message from messages since we'll add it in each function
-  const userMessages = messages.filter(msg => msg.role !== 'system');
-  
   switch (model) {
     case 'gpt-5-chat-latest':
-      return await callOpenAI(userMessages, systemPrompt);
+      return await callOpenAI(messages, systemPrompt);
     case 'claude-4.5-sonnet':
-      return await callClaude(userMessages, systemPrompt);
+      return await callClaude(messages, systemPrompt);
     case 'gemini-2.5-pro':
-      return await callGemini(userMessages, systemPrompt);
+      return await callGemini(messages, systemPrompt);
     default:
       throw new Error(`Unsupported model: ${model}`);
   }
@@ -314,10 +311,8 @@ For non-edit requests, respond with plain text.`;
 - Content: ${documentContext.content || 'No content available'}`;
     }
 
-    // Build the conversation history
-    const messages: any[] = [
-      { role: 'system', content: systemPrompt }
-    ];
+    // Build the conversation history (without system message)
+    const messages: any[] = [];
 
     // Add chat history (last 10 messages)
     if (chatHistory && chatHistory.length > 0) {
@@ -337,22 +332,31 @@ For non-edit requests, respond with plain text.`;
 
     // Call AI model using the unified handler
     const selectedModel = model || 'gpt-5-chat-latest';
+    console.log('Calling AI model:', selectedModel);
+    console.log('System prompt:', systemPrompt.substring(0, 200) + '...');
+    console.log('User message:', message);
+    
     const response = await callAIModel(selectedModel, messages, systemPrompt);
+    console.log('AI Response:', response.substring(0, 500) + '...');
 
     // Try to parse JSON response for edit proposals
     let parsedResponse;
     try {
       parsedResponse = JSON.parse(response);
+      console.log('Parsed JSON:', JSON.stringify(parsedResponse, null, 2));
       // If it's a valid JSON with edit structure, return it
       if (parsedResponse.response && parsedResponse.edit) {
+        console.log('Returning edit proposal');
         res.json(parsedResponse);
         return;
       }
     } catch (e) {
+      console.log('Not valid JSON, treating as plain text');
       // Not JSON, continue with normal text response
     }
 
     // Return normal text response
+    console.log('Returning plain text response');
     res.json({ response });
 
   } catch (error) {
