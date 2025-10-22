@@ -20,6 +20,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
   const [needsOAuth, setNeedsOAuth] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [lastRequestTime, setLastRequestTime] = useState<number>(0);
   const { toasts, addToast, removeToast } = useErrorToast();
   
   // Store interval reference for cleanup
@@ -184,6 +185,16 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
   const loadFiles = useCallback(async () => {
     if (!user) return;
     
+    // Rate limiting: prevent requests more than once every 2 seconds
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTime;
+    if (timeSinceLastRequest < 2000) {
+      const waitTime = Math.ceil((2000 - timeSinceLastRequest) / 1000);
+      addToast(`Please wait ${waitTime} second(s) before refreshing files`, 'warning');
+      return;
+    }
+    
+    setLastRequestTime(now);
     setLoading(true);
     try {
       // Get user's Firebase ID token for authentication with Firebase Functions
@@ -215,9 +226,15 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
         // Only show error if there's actually an error message
         console.error('Error loading files:', data.error);
         const errorMessage = data.error;
-        addToast(`Failed to load files: ${errorMessage}`, 'error');
-        if (data.error.includes('OAuth tokens not found') || data.needsAuth) {
+        
+        // Check for specific error types
+        if (data.error.includes('Quota exceeded') || data.error.includes('quota metric')) {
+          addToast('Google Drive API quota exceeded. Please wait a minute and try again.', 'warning');
+        } else if (data.error.includes('OAuth tokens not found') || data.needsAuth) {
+          addToast('Please authorize Google Drive access first', 'warning');
           setNeedsOAuth(true);
+        } else {
+          addToast(`Failed to load files: ${errorMessage}`, 'error');
         }
         setFiles([]);
       } else {
