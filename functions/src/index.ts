@@ -31,6 +31,64 @@ function initializeClients() {
   }
 }
 
+// Function to fix common JSON formatting issues
+function fixCommonJsonIssues(jsonString: string): string {
+  try {
+    // First, try to parse as-is
+    JSON.parse(jsonString);
+    return jsonString;
+  } catch (e) {
+    console.log('Attempting to fix JSON issues...');
+    
+    let fixed = jsonString;
+    
+    // Fix 1: Handle unterminated strings by finding the last quote and closing it
+    const lastQuoteIndex = fixed.lastIndexOf('"');
+    if (lastQuoteIndex > 0) {
+      // Check if the string appears to be unterminated
+      const afterLastQuote = fixed.substring(lastQuoteIndex + 1);
+      if (afterLastQuote.trim() && !afterLastQuote.includes('}') && !afterLastQuote.includes(']')) {
+        // Likely unterminated string, try to close it
+        fixed = fixed.substring(0, lastQuoteIndex + 1) + '"}';
+        console.log('Fixed unterminated string');
+      }
+    }
+    
+    // Fix 2: Try to find and close unclosed objects/arrays
+    const openBraces = (fixed.match(/\{/g) || []).length;
+    const closeBraces = (fixed.match(/\}/g) || []).length;
+    const openBrackets = (fixed.match(/\[/g) || []).length;
+    const closeBrackets = (fixed.match(/\]/g) || []).length;
+    
+    // Add missing closing braces
+    for (let i = 0; i < openBraces - closeBraces; i++) {
+      fixed += '}';
+    }
+    
+    // Add missing closing brackets
+    for (let i = 0; i < openBrackets - closeBrackets; i++) {
+      fixed += ']';
+    }
+    
+    // Fix 3: Handle trailing commas
+    fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
+    
+    // Fix 4: Handle unescaped newlines in strings
+    fixed = fixed.replace(/([^\\])\n/g, '$1\\n');
+    
+    console.log('Applied JSON fixes, attempting to parse...');
+    
+    try {
+      // Test if the fixed JSON is valid
+      JSON.parse(fixed);
+      return fixed;
+    } catch (e2) {
+      console.log('JSON fixes failed, returning original:', e2 instanceof Error ? e2.message : String(e2));
+      return jsonString;
+    }
+  }
+}
+
 // Railway API URL - using environment variables
 const RAILWAY_API_URL = process.env.RAILWAY_API_URL || 'https://google-mcp-tools-access-production.up.railway.app';
 
@@ -290,6 +348,14 @@ PRECISION REQUIREMENTS:
 - Make minimal necessary changes that preserve document flow
 - Analyze document structure before suggesting edits
 
+CRITICAL JSON FORMATTING REQUIREMENTS:
+- ALWAYS return valid JSON - no unterminated strings, no unescaped quotes
+- Escape all quotes inside string values with backslashes (\")
+- Escape all newlines inside string values with \\n
+- Ensure all JSON objects and arrays are properly closed
+- NO trailing commas before closing braces or brackets
+- Test your JSON before responding
+
 Return JSON format:
 {
   "response": "Brief explanation of what you're changing and why",
@@ -354,6 +420,9 @@ For non-edit requests, respond with plain text.`;
       } else if (cleanResponse.startsWith('```')) {
         cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
       }
+      
+      // Try to fix common JSON issues before parsing
+      cleanResponse = fixCommonJsonIssues(cleanResponse);
       
       parsedResponse = JSON.parse(cleanResponse);
       console.log('Parsed JSON:', JSON.stringify(parsedResponse, null, 2));
