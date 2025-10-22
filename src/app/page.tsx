@@ -195,7 +195,14 @@ export default function Home() {
       
       // Determine operation and params based on edit type
       let operation: string;
-      let params: any;
+      let params: {
+        documentId: string;
+        findText?: string;
+        replaceWithText?: string;
+        newContent?: string;
+        text?: string;
+        position?: number;
+      };
       
       switch (message.editProposal.type) {
         case 'rewrite':
