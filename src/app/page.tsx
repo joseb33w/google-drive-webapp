@@ -304,7 +304,7 @@ export default function Home() {
     
     // Try exact match first
     content.forEach((item, pIndex) => {
-      if (item.text.includes(findText)) {
+      if (item.text && item.text.includes(findText)) {
         matches.push({
           paragraphIndex: pIndex,
           index: item.text.indexOf(findText),
@@ -319,15 +319,17 @@ export default function Home() {
     // Normalize whitespace and try again
     const normalizedFind = findText.replace(/\s+/g, ' ').trim();
     content.forEach((item, pIndex) => {
-      const normalized = item.text.replace(/\s+/g, ' ').trim();
-      if (normalized.includes(normalizedFind)) {
-        const index = item.text.indexOf(normalizedFind);
-        matches.push({
-          paragraphIndex: pIndex,
-          index,
-          length: normalizedFind.length,
-          confidence: 'medium'
-        });
+      if (item.text) {
+        const normalized = item.text.replace(/\s+/g, ' ').trim();
+        if (normalized.includes(normalizedFind)) {
+          const index = item.text.indexOf(normalizedFind);
+          matches.push({
+            paragraphIndex: pIndex,
+            index,
+            length: normalizedFind.length,
+            confidence: 'medium'
+          });
+        }
       }
     });
     
@@ -338,7 +340,7 @@ export default function Home() {
     if (words.length > 2) {
       const coreText = words.slice(1, -1).join(' ');
       content.forEach((item, pIndex) => {
-        if (item.text.includes(coreText)) {
+        if (item.text && item.text.includes(coreText)) {
           matches.push({
             paragraphIndex: pIndex,
             index: item.text.indexOf(coreText),
