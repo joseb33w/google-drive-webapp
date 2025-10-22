@@ -342,7 +342,15 @@ For non-edit requests, respond with plain text.`;
     // Try to parse JSON response for edit proposals
     let parsedResponse;
     try {
-      parsedResponse = JSON.parse(response);
+      // Clean the response by removing markdown code blocks if present
+      let cleanResponse = response.trim();
+      if (cleanResponse.startsWith('```json')) {
+        cleanResponse = cleanResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (cleanResponse.startsWith('```')) {
+        cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+      
+      parsedResponse = JSON.parse(cleanResponse);
       console.log('Parsed JSON:', JSON.stringify(parsedResponse, null, 2));
       // If it's a valid JSON with edit structure, return it
       if (parsedResponse.response && parsedResponse.edit) {
@@ -351,7 +359,7 @@ For non-edit requests, respond with plain text.`;
         return;
       }
     } catch (e) {
-      console.log('Not valid JSON, treating as plain text');
+      console.log('Not valid JSON, treating as plain text. Error:', e instanceof Error ? e.message : String(e));
       // Not JSON, continue with normal text response
     }
 
