@@ -5,6 +5,7 @@ import FileList from '@/components/FileList';
 import ChatPanel from '@/components/ChatPanel';
 import { File, Message, DocumentContent, DocumentContentItem } from '@/types';
 import { FIREBASE_FUNCTIONS } from '@/lib/config';
+import { ErrorToast, useErrorToast } from '@/components/ErrorToast';
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -17,9 +18,11 @@ export default function Home() {
     findText: string;
     replaceText: string;
   } | null>(null);
+  const [isApplyingEdit, setIsApplyingEdit] = useState(false);
   
   // Model selection state
   const [selectedModel, setSelectedModel] = useState('gpt-5-chat-latest');
+  const { toasts, addToast, removeToast } = useErrorToast();
   
   // Panel widths (in percentages)
   const [leftWidth, setLeftWidth] = useState(25);
@@ -175,13 +178,18 @@ export default function Home() {
     const message = chatHistory.find(m => m.id === messageId);
     if (!message || !message.editProposal) return;
 
+    setIsApplyingEdit(true);
+    
     try {
       // Get Firebase auth token
       const { getAuth } = await import('firebase/auth');
       const auth = getAuth();
       const user = auth.currentUser;
       
-      if (!user || !selectedFile) return;
+      if (!user || !selectedFile) {
+        addToast('Please sign in to apply edits', 'warning');
+        return;
+      }
 
       const idToken = await user.getIdToken();
       
@@ -203,7 +211,8 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to apply edit');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to apply edit');
       }
 
       // Update message status to accepted
@@ -217,12 +226,19 @@ export default function Home() {
       // Clear pending edit
       setPendingEdit(null);
 
+      // Show success message
+      addToast('Edit applied successfully!', 'info', 3000);
+
       // Reload document content to show the changes
       if (selectedFile) {
         loadDocumentContent(selectedFile);
       }
     } catch (error) {
       console.error('Error accepting edit:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to apply edit';
+      addToast(`Failed to apply edit: ${errorMessage}`, 'error');
+    } finally {
+      setIsApplyingEdit(false);
     }
   };
 
@@ -453,9 +469,21 @@ export default function Home() {
             onRejectEdit={handleRejectEdit}
             selectedModel={selectedModel}
             onModelChange={setSelectedModel}
+            isApplyingEdit={isApplyingEdit}
           />
         </div>
       </div>
+      
+      {/* Error Toasts */}
+      {toasts.map((toast) => (
+        <ErrorToast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          duration={toast.duration}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </div>
   );
 }

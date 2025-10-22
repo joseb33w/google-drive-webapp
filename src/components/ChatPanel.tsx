@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { File, Message, DocumentContent, DocumentContentItem } from '@/types';
+import { ErrorToast, useErrorToast } from './ErrorToast';
 
 interface EditProposal {
   messageId: string;
@@ -20,12 +21,14 @@ interface ChatPanelProps {
   onRejectEdit: (messageId: string) => void;
   selectedModel: string;
   onModelChange: (model: string) => void;
+  isApplyingEdit?: boolean;
 }
 
-export default function ChatPanel({ selectedFile, documentContent, chatHistory, onChatUpdate, onEditProposal, onAcceptEdit, onRejectEdit, selectedModel, onModelChange }: ChatPanelProps) {
+export default function ChatPanel({ selectedFile, documentContent, chatHistory, onChatUpdate, onEditProposal, onAcceptEdit, onRejectEdit, selectedModel, onModelChange, isApplyingEdit = false }: ChatPanelProps) {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toasts, addToast, removeToast } = useErrorToast();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -116,6 +119,17 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
       onChatUpdate([...newMessages, assistantMessage]);
     } catch (error) {
       console.error('Error sending message:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Failed to send message';
+      
+      // Show user-friendly error toast
+      if (errorMsg.includes('User not authenticated')) {
+        addToast('Please sign in to continue chatting', 'warning');
+      } else if (errorMsg.includes('Failed to fetch')) {
+        addToast('Network error. Please check your connection and try again.', 'error');
+      } else {
+        addToast(`Chat error: ${errorMsg}`, 'error');
+      }
+      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -236,13 +250,22 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
                        <div className="flex gap-2">
                          <button 
                            onClick={() => onAcceptEdit(message.id)}
-                           className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 flex items-center gap-1"
+                           disabled={isApplyingEdit}
+                           className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                          >
-                           ✓ Accept
+                           {isApplyingEdit ? (
+                             <>
+                               <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
+                               Applying...
+                             </>
+                           ) : (
+                             <>✓ Accept</>
+                           )}
                          </button>
                          <button 
                            onClick={() => onRejectEdit(message.id)}
-                           className="px-3 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400 flex items-center gap-1"
+                           disabled={isApplyingEdit}
+                           className="px-3 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                          >
                            ✗ Reject
                          </button>
@@ -309,6 +332,17 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
           Press Enter to send, Shift+Enter for new line
         </p>
       </div>
+      
+      {/* Error Toasts */}
+      {toasts.map((toast) => (
+        <ErrorToast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          duration={toast.duration}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </div>
   );
 }

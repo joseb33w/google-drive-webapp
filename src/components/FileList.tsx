@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { httpsCallable } from 'firebase/functions';
 import { File, AuthUser } from '@/types';
 import { FIREBASE_FUNCTIONS, getGoogleClientId } from '@/lib/config';
+import { ErrorToast, useErrorToast } from './ErrorToast';
 
 interface FileListProps {
   onFileSelect: (file: File) => void;
@@ -19,6 +20,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
   const [needsOAuth, setNeedsOAuth] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const { toasts, addToast, removeToast } = useErrorToast();
 
   // Handle Google Sign-In with Google Drive scopes
   const handleGoogleSignIn = async () => {
@@ -60,6 +62,8 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
       
     } catch (error) {
       console.error('Sign-in error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to sign in with Google';
+      addToast(`Sign-in failed: ${errorMessage}`, 'error');
     }
   };
 
@@ -102,6 +106,8 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
       
     } catch (error) {
       console.error('OAuth authorization error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to authorize Google Drive access';
+      addToast(`OAuth authorization failed: ${errorMessage}`, 'error');
     }
   };
 
@@ -185,6 +191,8 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
         setNeedsOAuth(false);
       } else {
         console.error('Error loading files:', data.error);
+        const errorMessage = data.error || 'Failed to load files from Google Drive';
+        addToast(`Failed to load files: ${errorMessage}`, 'error');
         if (data.error?.includes('OAuth tokens not found') || data.needsAuth) {
           setNeedsOAuth(true);
         }
@@ -192,12 +200,14 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
       }
     } catch (error) {
       console.error('Error loading files:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load files from Google Drive';
+      addToast(`Failed to load files: ${errorMessage}`, 'error');
       setNeedsOAuth(true);
       setFiles([]);
     } finally {
       setLoading(false);
     }
-  }, [user]); // Removed sessionId dependency
+  }, [user, addToast]); // Removed sessionId dependency
 
   // No longer needed - Firebase Auth handles Google Drive access
 
@@ -378,6 +388,17 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
           </div>
         )}
       </div>
+      
+      {/* Error Toasts */}
+      {toasts.map((toast) => (
+        <ErrorToast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          duration={toast.duration}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </div>
   );
 }
