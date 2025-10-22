@@ -19,7 +19,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
   const [loading, setLoading] = useState(false);
   const [needsOAuth, setNeedsOAuth] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  // Removed sessionId - no longer needed since we don't auto-load files
   const [lastRequestTime, setLastRequestTime] = useState<number>(0);
   const { toasts, addToast, removeToast } = useErrorToast();
   
@@ -65,7 +65,6 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
       }
       
       // Clear any existing session ID since we're using Firebase Auth now
-      setSessionId(null);
       localStorage.removeItem('sessionId');
       
     } catch (error) {
@@ -177,9 +176,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
     try {
       await signOut(auth);
       setUser(null);
-      setSessionId(null);
       setFiles([]);
-      localStorage.removeItem('sessionId');
     } catch (error) {
       console.error('Sign-out error:', error);
     }
@@ -187,7 +184,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
 
   // Load files from Google Drive via Firebase Functions
   const loadFiles = useCallback(async () => {
-    if (!user) return;
+    if (!user || loading) return;
     
     // Cancel any existing request
     if (abortControllerRef.current) {
@@ -199,25 +196,23 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
       clearTimeout(debounceTimeoutRef.current);
     }
     
+    // Rate limiting: prevent requests more than once every 3 seconds
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTime;
+    if (timeSinceLastRequest < 3000) {
+      const waitTime = Math.ceil((3000 - timeSinceLastRequest) / 1000);
+      addToast(`Please wait ${waitTime} second(s) before refreshing files`, 'warning');
+      return;
+    }
+    
     // Debounce requests - wait 500ms before making the actual request
-    return new Promise<void>((resolve) => {
-      debounceTimeoutRef.current = setTimeout(async () => {
-        try {
-          // Rate limiting: prevent requests more than once every 2 seconds
-          const now = Date.now();
-          const timeSinceLastRequest = now - lastRequestTime;
-          if (timeSinceLastRequest < 2000) {
-            const waitTime = Math.ceil((2000 - timeSinceLastRequest) / 1000);
-            addToast(`Please wait ${waitTime} second(s) before refreshing files`, 'warning');
-            resolve();
-            return;
-          }
-          
-          setLastRequestTime(now);
-          setLoading(true);
-          
-          // Create new abort controller for this request
-          abortControllerRef.current = new AbortController();
+    debounceTimeoutRef.current = setTimeout(async () => {
+      try {
+        setLastRequestTime(Date.now());
+        setLoading(true);
+        
+        // Create new abort controller for this request
+        abortControllerRef.current = new AbortController();
           
           // Get user's Firebase ID token for authentication with Firebase Functions
           const idToken = await user.getIdToken();
@@ -269,7 +264,6 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
           // Don't show error if request was aborted
           if (error instanceof Error && error.name === 'AbortError') {
             console.log('Request was cancelled');
-            resolve();
             return;
           }
           
@@ -296,11 +290,9 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
           setFiles([]);
         } finally {
           setLoading(false);
-          resolve();
         }
       }, 500); // 500ms debounce delay
-    });
-  }, [user, addToast, lastRequestTime]); // Added lastRequestTime dependency
+  }, [user, addToast, lastRequestTime, loading]); // Added loading dependency
 
   // No longer needed - Firebase Auth handles Google Drive access
 
@@ -309,22 +301,14 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
-      if (user) {
-        const session = localStorage.getItem('sessionId') || Math.random().toString(36).substring(2, 15);
-        setSessionId(session);
-        localStorage.setItem('sessionId', session);
-      }
+      // No longer auto-load files - user must click "Refresh Files" button
     });
 
     return () => unsubscribe();
   }, []);
 
-  // Load files when session is available
-  useEffect(() => {
-    if (sessionId && user) {
-      loadFiles();
-    }
-  }, [sessionId, user, loadFiles]);
+  // Don't automatically load files - let user click "Refresh Files" button
+  // This prevents network errors when user signs in but hasn't authorized Google Drive yet
 
   // Cleanup intervals and requests on component unmount
   useEffect(() => {
