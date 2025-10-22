@@ -44,62 +44,8 @@ function fixCommonJsonIssues(jsonString: string): string {
     
     let fixed = jsonString.trim();
     
-    // Fix 1: More robust unterminated string detection
-    // Find all complete string pairs first
-    const stringPairs = [];
-    let inString = false;
-    let stringStart = -1;
-    let escapeNext = false;
-    
-    for (let i = 0; i < fixed.length; i++) {
-      const char = fixed[i];
-      
-      if (escapeNext) {
-        escapeNext = false;
-        continue;
-      }
-      
-      if (char === '\\') {
-        escapeNext = true;
-        continue;
-      }
-      
-      if (char === '"' && !inString) {
-        inString = true;
-        stringStart = i;
-      } else if (char === '"' && inString) {
-        inString = false;
-        stringPairs.push({ start: stringStart, end: i });
-      }
-    }
-    
-    // If we're still in a string at the end, it's unterminated
-    if (inString) {
-      console.log('Fixed unterminated string');
-      fixed = fixed + '"';
-    }
-    
-    // Fix 2: Try to find and close unclosed objects/arrays
-    const openBraces = (fixed.match(/\{/g) || []).length;
-    const closeBraces = (fixed.match(/\}/g) || []).length;
-    const openBrackets = (fixed.match(/\[/g) || []).length;
-    const closeBrackets = (fixed.match(/\]/g) || []).length;
-    
-    // Add missing closing braces
-    for (let i = 0; i < openBraces - closeBraces; i++) {
-      fixed += '}';
-    }
-    
-    // Add missing closing brackets
-    for (let i = 0; i < openBrackets - closeBrackets; i++) {
-      fixed += ']';
-    }
-    
-    // Fix 3: Handle trailing commas
-    fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
-    
-    // Fix 4: Handle unescaped newlines in strings (more careful approach)
-    // Only replace newlines that are inside string values
+    // Fix 1: Handle unescaped newlines in strings (most common issue with Claude)
+    // This is a more aggressive approach that handles the newContent field properly
     let result = '';
     let inStringValue = false;
     let escapeNextChar = false;
@@ -125,17 +71,46 @@ function fixCommonJsonIssues(jsonString: string): string {
       } else if (char === '"' && inStringValue) {
         inStringValue = false;
         result += char;
-      } else if (inStringValue && (char === '\n' || char === '\r' || char === '\t')) {
-        // Escape newlines, carriage returns, and tabs inside strings
-        if (char === '\n') result += '\\n';
-        else if (char === '\r') result += '\\r';
-        else if (char === '\t') result += '\\t';
+      } else if (inStringValue) {
+        // Inside a string value, escape special characters
+        if (char === '\n') {
+          result += '\\n';
+        } else if (char === '\r') {
+          result += '\\r';
+        } else if (char === '\t') {
+          result += '\\t';
+        } else if (char === '"') {
+          result += '\\"';
+        } else if (char === '\\') {
+          result += '\\\\';
+        } else {
+          result += char;
+        }
       } else {
         result += char;
       }
     }
     
     fixed = result;
+    
+    // Fix 2: Try to find and close unclosed objects/arrays
+    const openBraces = (fixed.match(/\{/g) || []).length;
+    const closeBraces = (fixed.match(/\}/g) || []).length;
+    const openBrackets = (fixed.match(/\[/g) || []).length;
+    const closeBrackets = (fixed.match(/\]/g) || []).length;
+    
+    // Add missing closing braces
+    for (let i = 0; i < openBraces - closeBraces; i++) {
+      fixed += '}';
+    }
+    
+    // Add missing closing brackets
+    for (let i = 0; i < openBrackets - closeBrackets; i++) {
+      fixed += ']';
+    }
+    
+    // Fix 3: Handle trailing commas
+    fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
     
     console.log('Applied JSON fixes, attempting to parse...');
     
