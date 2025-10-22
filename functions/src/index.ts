@@ -342,9 +342,14 @@ For non-edit requests, respond with plain text.`;
     // Try to parse JSON response for edit proposals
     let parsedResponse;
     try {
-      // Clean the response by removing markdown code blocks if present
+      // Clean the response by extracting JSON from markdown code blocks
       let cleanResponse = response.trim();
-      if (cleanResponse.startsWith('```json')) {
+      
+      // Look for JSON within markdown code blocks
+      const jsonMatch = cleanResponse.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+      if (jsonMatch) {
+        cleanResponse = jsonMatch[1];
+      } else if (cleanResponse.startsWith('```json')) {
         cleanResponse = cleanResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
       } else if (cleanResponse.startsWith('```')) {
         cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
