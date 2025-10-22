@@ -10,6 +10,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // Initialize Firebase Admin
 admin.initializeApp();
 
+// Full editing capabilities enabled for AI models
+
 // Initialize AI clients (will be initialized when needed)
 let openai: OpenAI;
 let anthropic: Anthropic;
