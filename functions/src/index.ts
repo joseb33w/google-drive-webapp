@@ -348,6 +348,13 @@ PRECISION REQUIREMENTS:
 - Make minimal necessary changes that preserve document flow
 - Analyze document structure before suggesting edits
 
+CRITICAL CONTENT REQUIREMENTS:
+- NEVER use computer programming language, technical jargon, or code-related terms
+- Use natural, human language appropriate for the document context
+- Avoid terms like "protocol", "source code", "algorithm", "system", "program", "function"
+- Write in the same style and tone as the existing document
+- Focus on narrative, descriptive, and human-centered language
+
 CRITICAL JSON FORMATTING REQUIREMENTS:
 - ALWAYS return valid JSON - no unterminated strings, no unescaped quotes
 - Escape all quotes inside string values with backslashes (\")
@@ -355,6 +362,7 @@ CRITICAL JSON FORMATTING REQUIREMENTS:
 - Ensure all JSON objects and arrays are properly closed
 - NO trailing commas before closing braces or brackets
 - Test your JSON before responding
+- If your response is too long, break it into smaller, valid JSON chunks
 
 Return JSON format:
 {
@@ -426,6 +434,7 @@ For non-edit requests, respond with plain text.`;
       
       parsedResponse = JSON.parse(cleanResponse);
       console.log('Parsed JSON:', JSON.stringify(parsedResponse, null, 2));
+      
       // If it's a valid JSON with edit structure, return it
       if (parsedResponse.response && parsedResponse.edit) {
         console.log('Returning edit proposal');
@@ -434,6 +443,37 @@ For non-edit requests, respond with plain text.`;
       }
     } catch (e) {
       console.log('Not valid JSON, treating as plain text. Error:', e instanceof Error ? e.message : String(e));
+      
+      // Try one more aggressive fix for common Claude issues
+      try {
+        let aggressiveFix = response.trim();
+        
+        // Remove markdown code blocks
+        aggressiveFix = aggressiveFix.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+        
+        // Find the first { and last } to extract just the JSON part
+        const firstBrace = aggressiveFix.indexOf('{');
+        const lastBrace = aggressiveFix.lastIndexOf('}');
+        
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+          aggressiveFix = aggressiveFix.substring(firstBrace, lastBrace + 1);
+          
+          // Apply fixes
+          aggressiveFix = fixCommonJsonIssues(aggressiveFix);
+          
+          parsedResponse = JSON.parse(aggressiveFix);
+          console.log('Aggressive fix succeeded, parsed JSON:', JSON.stringify(parsedResponse, null, 2));
+          
+          if (parsedResponse.response && parsedResponse.edit) {
+            console.log('Returning edit proposal from aggressive fix');
+            res.json(parsedResponse);
+            return;
+          }
+        }
+      } catch (aggressiveError) {
+        console.log('Aggressive fix also failed:', aggressiveError instanceof Error ? aggressiveError.message : String(aggressiveError));
+      }
+      
       // Not JSON, continue with normal text response
     }
 
