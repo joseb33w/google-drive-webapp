@@ -300,6 +300,11 @@ export default function Home() {
 
   // Smart text matching function
   const findTextWithFuzzyMatching = (content: DocumentContentItem[], findText: string) => {
+    // Return null if findText is undefined or empty
+    if (!findText || typeof findText !== 'string') {
+      return null;
+    }
+    
     const matches: Array<{paragraphIndex: number, index: number, length: number, confidence: string}> = [];
     
     // Try exact match first
