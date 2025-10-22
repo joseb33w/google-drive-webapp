@@ -25,6 +25,10 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
   
   // Store interval reference for cleanup
   const oauthCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Request cancellation and debouncing
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Handle Google Sign-In with Google Drive scopes
   const handleGoogleSignIn = async () => {
@@ -185,35 +189,54 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
   const loadFiles = useCallback(async () => {
     if (!user) return;
     
-    // Rate limiting: prevent requests more than once every 2 seconds
-    const now = Date.now();
-    const timeSinceLastRequest = now - lastRequestTime;
-    if (timeSinceLastRequest < 2000) {
-      const waitTime = Math.ceil((2000 - timeSinceLastRequest) / 1000);
-      addToast(`Please wait ${waitTime} second(s) before refreshing files`, 'warning');
-      return;
+    // Cancel any existing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
     
-    setLastRequestTime(now);
-    setLoading(true);
-    try {
-      // Get user's Firebase ID token for authentication with Firebase Functions
-      const idToken = await user.getIdToken();
-      
-      // Call Firebase Functions directly (no more Railway proxy)
-      const response = await fetch(FIREBASE_FUNCTIONS.googleDriveOperations, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`, // Authenticate Firebase Function call
-        },
-        body: JSON.stringify({
-          operation: 'list_files',
-          params: {
-            maxResults: 50
+    // Clear any existing debounce timeout
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    
+    // Debounce requests - wait 500ms before making the actual request
+    return new Promise<void>((resolve) => {
+      debounceTimeoutRef.current = setTimeout(async () => {
+        try {
+          // Rate limiting: prevent requests more than once every 2 seconds
+          const now = Date.now();
+          const timeSinceLastRequest = now - lastRequestTime;
+          if (timeSinceLastRequest < 2000) {
+            const waitTime = Math.ceil((2000 - timeSinceLastRequest) / 1000);
+            addToast(`Please wait ${waitTime} second(s) before refreshing files`, 'warning');
+            resolve();
+            return;
           }
-        })
-      });
+          
+          setLastRequestTime(now);
+          setLoading(true);
+          
+          // Create new abort controller for this request
+          abortControllerRef.current = new AbortController();
+          
+          // Get user's Firebase ID token for authentication with Firebase Functions
+          const idToken = await user.getIdToken();
+          
+          // Call Firebase Functions directly (no more Railway proxy)
+          const response = await fetch(FIREBASE_FUNCTIONS.googleDriveOperations, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${idToken}`, // Authenticate Firebase Function call
+            },
+            body: JSON.stringify({
+              operation: 'list_files',
+              params: {
+                maxResults: 50
+              }
+            }),
+            signal: abortControllerRef.current.signal // Add abort signal
+          });
 
       const data = await response.json();
       
@@ -242,31 +265,41 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
         console.warn('Unexpected response format:', data);
         setFiles([]);
       }
-    } catch (error) {
-      console.error('Error loading files:', error);
-      
-      // Handle different types of errors more specifically
-      let errorMessage = 'Failed to load files from Google Drive';
-      let errorType: 'error' | 'warning' = 'error';
-      
-      if (error instanceof Error) {
-        if (error.message.includes('Failed to fetch')) {
-          errorMessage = 'Network error. Please check your connection and try again.';
-          errorType = 'warning';
-        } else if (error.message.includes('User not authenticated')) {
-          errorMessage = 'Please sign in to access your Google Drive files.';
-          errorType = 'warning';
-        } else {
-          errorMessage = error.message;
+        } catch (error) {
+          // Don't show error if request was aborted
+          if (error instanceof Error && error.name === 'AbortError') {
+            console.log('Request was cancelled');
+            resolve();
+            return;
+          }
+          
+          console.error('Error loading files:', error);
+          
+          // Handle different types of errors more specifically
+          let errorMessage = 'Failed to load files from Google Drive';
+          let errorType: 'error' | 'warning' = 'error';
+          
+          if (error instanceof Error) {
+            if (error.message.includes('Failed to fetch')) {
+              errorMessage = 'Network error. Please check your connection and try again.';
+              errorType = 'warning';
+            } else if (error.message.includes('User not authenticated')) {
+              errorMessage = 'Please sign in to access your Google Drive files.';
+              errorType = 'warning';
+            } else {
+              errorMessage = error.message;
+            }
+          }
+          
+          addToast(`Failed to load files: ${errorMessage}`, errorType);
+          setNeedsOAuth(true);
+          setFiles([]);
+        } finally {
+          setLoading(false);
+          resolve();
         }
-      }
-      
-      addToast(`Failed to load files: ${errorMessage}`, errorType);
-      setNeedsOAuth(true);
-      setFiles([]);
-    } finally {
-      setLoading(false);
-    }
+      }, 500); // 500ms debounce delay
+    });
   }, [user, addToast, lastRequestTime]); // Added lastRequestTime dependency
 
   // No longer needed - Firebase Auth handles Google Drive access
@@ -293,12 +326,20 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
     }
   }, [sessionId, user, loadFiles]);
 
-  // Cleanup interval on component unmount
+  // Cleanup intervals and requests on component unmount
   useEffect(() => {
     return () => {
       if (oauthCheckIntervalRef.current) {
         clearInterval(oauthCheckIntervalRef.current);
         oauthCheckIntervalRef.current = null;
+      }
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+        debounceTimeoutRef.current = null;
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
       }
     };
   }, []);

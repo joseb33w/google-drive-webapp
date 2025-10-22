@@ -28,6 +28,7 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const { toasts, addToast, removeToast } = useErrorToast();
 
   const scrollToBottom = () => {
@@ -41,6 +42,11 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
+    // Cancel any existing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -52,6 +58,9 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
     onChatUpdate(newMessages);
     setInputMessage('');
     setIsLoading(true);
+
+    // Create new abort controller for this request
+    abortControllerRef.current = new AbortController();
 
     try {
       // Get Firebase ID token for authentication
@@ -82,6 +91,7 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
           idToken: idToken, // Pass ID token to API route
           model: selectedModel // Pass selected model
         }),
+        signal: abortControllerRef.current.signal // Add abort signal
       });
 
       if (!response.ok) {
@@ -121,6 +131,12 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
 
       onChatUpdate([...newMessages, assistantMessage]);
     } catch (error) {
+      // Don't show error if request was aborted
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('Chat request was cancelled');
+        return;
+      }
+      
       console.error('Error sending message:', error);
       const errorMsg = error instanceof Error ? error.message : 'Failed to send message';
       
@@ -155,6 +171,15 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
   const clearChat = () => {
     onChatUpdate([]);
   };
+
+  // Cleanup abort controller on component unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
 
   return (
