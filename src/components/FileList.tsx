@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, functions } from '@/lib/firebase';
 import Image from 'next/image';
@@ -21,6 +21,9 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
   const [user, setUser] = useState<AuthUser | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const { toasts, addToast, removeToast } = useErrorToast();
+  
+  // Store interval reference for cleanup
+  const oauthCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Handle Google Sign-In with Google Drive scopes
   const handleGoogleSignIn = async () => {
@@ -70,6 +73,12 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
   // Handle Google Drive OAuth authorization
   const handleGoogleDriveAuth = async () => {
     try {
+      // Clean up any existing interval first
+      if (oauthCheckIntervalRef.current) {
+        clearInterval(oauthCheckIntervalRef.current);
+        oauthCheckIntervalRef.current = null;
+      }
+      
       // Create OAuth URL for Google Drive access
       const clientId = getGoogleClientId();
       const redirectUri = encodeURIComponent(window.location.origin);
@@ -92,9 +101,14 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
       const popup = window.open(authUrl, 'google-oauth', 'width=500,height=600');
       
       // Listen for the popup to close or receive the authorization code
-      const checkClosed = setInterval(() => {
+      oauthCheckIntervalRef.current = setInterval(() => {
         if (popup?.closed) {
-          clearInterval(checkClosed);
+          // Clean up interval
+          if (oauthCheckIntervalRef.current) {
+            clearInterval(oauthCheckIntervalRef.current);
+            oauthCheckIntervalRef.current = null;
+          }
+          
           // Check if we have the authorization code in the URL
           const urlParams = new URLSearchParams(window.location.search);
           const code = urlParams.get('code');
@@ -108,6 +122,12 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
       console.error('OAuth authorization error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to authorize Google Drive access';
       addToast(`OAuth authorization failed: ${errorMessage}`, 'error');
+      
+      // Clean up interval on error
+      if (oauthCheckIntervalRef.current) {
+        clearInterval(oauthCheckIntervalRef.current);
+        oauthCheckIntervalRef.current = null;
+      }
     }
   };
 
@@ -255,6 +275,16 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
       loadFiles();
     }
   }, [sessionId, user, loadFiles]);
+
+  // Cleanup interval on component unmount
+  useEffect(() => {
+    return () => {
+      if (oauthCheckIntervalRef.current) {
+        clearInterval(oauthCheckIntervalRef.current);
+        oauthCheckIntervalRef.current = null;
+      }
+    };
+  }, []);
 
   if (!user) {
     return (
