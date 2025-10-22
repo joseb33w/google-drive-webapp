@@ -40,18 +40,41 @@ function fixCommonJsonIssues(jsonString: string): string {
   } catch (e) {
     console.log('Attempting to fix JSON issues...');
     
-    let fixed = jsonString;
+    let fixed = jsonString.trim();
     
-    // Fix 1: Handle unterminated strings by finding the last quote and closing it
-    const lastQuoteIndex = fixed.lastIndexOf('"');
-    if (lastQuoteIndex > 0) {
-      // Check if the string appears to be unterminated
-      const afterLastQuote = fixed.substring(lastQuoteIndex + 1);
-      if (afterLastQuote.trim() && !afterLastQuote.includes('}') && !afterLastQuote.includes(']')) {
-        // Likely unterminated string, try to close it
-        fixed = fixed.substring(0, lastQuoteIndex + 1) + '"}';
-        console.log('Fixed unterminated string');
+    // Fix 1: More robust unterminated string detection
+    // Find all complete string pairs first
+    const stringPairs = [];
+    let inString = false;
+    let stringStart = -1;
+    let escapeNext = false;
+    
+    for (let i = 0; i < fixed.length; i++) {
+      const char = fixed[i];
+      
+      if (escapeNext) {
+        escapeNext = false;
+        continue;
       }
+      
+      if (char === '\\') {
+        escapeNext = true;
+        continue;
+      }
+      
+      if (char === '"' && !inString) {
+        inString = true;
+        stringStart = i;
+      } else if (char === '"' && inString) {
+        inString = false;
+        stringPairs.push({ start: stringStart, end: i });
+      }
+    }
+    
+    // If we're still in a string at the end, it's unterminated
+    if (inString) {
+      console.log('Fixed unterminated string');
+      fixed = fixed + '"';
     }
     
     // Fix 2: Try to find and close unclosed objects/arrays
@@ -73,8 +96,44 @@ function fixCommonJsonIssues(jsonString: string): string {
     // Fix 3: Handle trailing commas
     fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
     
-    // Fix 4: Handle unescaped newlines in strings
-    fixed = fixed.replace(/([^\\])\n/g, '$1\\n');
+    // Fix 4: Handle unescaped newlines in strings (more careful approach)
+    // Only replace newlines that are inside string values
+    let result = '';
+    let inStringValue = false;
+    let escapeNextChar = false;
+    
+    for (let i = 0; i < fixed.length; i++) {
+      const char = fixed[i];
+      
+      if (escapeNextChar) {
+        result += char;
+        escapeNextChar = false;
+        continue;
+      }
+      
+      if (char === '\\') {
+        result += char;
+        escapeNextChar = true;
+        continue;
+      }
+      
+      if (char === '"' && !inStringValue) {
+        inStringValue = true;
+        result += char;
+      } else if (char === '"' && inStringValue) {
+        inStringValue = false;
+        result += char;
+      } else if (inStringValue && (char === '\n' || char === '\r' || char === '\t')) {
+        // Escape newlines, carriage returns, and tabs inside strings
+        if (char === '\n') result += '\\n';
+        else if (char === '\r') result += '\\r';
+        else if (char === '\t') result += '\\t';
+      } else {
+        result += char;
+      }
+    }
+    
+    fixed = result;
     
     console.log('Applied JSON fixes, attempting to parse...');
     
@@ -357,12 +416,22 @@ CRITICAL CONTENT REQUIREMENTS:
 
 CRITICAL JSON FORMATTING REQUIREMENTS:
 - ALWAYS return valid JSON - no unterminated strings, no unescaped quotes
-- Escape all quotes inside string values with backslashes (\")
-- Escape all newlines inside string values with \\n
+- Escape all quotes inside string values with backslashes (\\")
+- Escape all newlines inside string values with \\\\n
+- Escape all carriage returns with \\\\r and tabs with \\\\t
 - Ensure all JSON objects and arrays are properly closed
 - NO trailing commas before closing braces or brackets
-- Test your JSON before responding
-- If your response is too long, break it into smaller, valid JSON chunks
+- Test your JSON before responding - it MUST be parseable
+- If your response contains newlines, you MUST escape them as \\\\n
+
+JSON VALIDATION CHECKLIST:
+1. Every opening brace { has a closing brace }
+2. Every opening bracket [ has a closing bracket ]
+3. Every string starts and ends with quotes
+4. All quotes inside strings are escaped with \\
+5. All newlines inside strings are escaped as \\\\n
+6. No trailing commas before } or ]
+7. The entire response is valid JSON
 
 Return JSON format:
 {
