@@ -11,11 +11,13 @@ export interface File {
   modifiedTime: string;
   webViewLink: string;
   isGoogleDoc: boolean;
+  isGoogleSheet: boolean;
 }
 
 export interface DocumentContentItem {
   type: string;
   text: string;
+  rowIndex?: number; // For spreadsheet rows
 }
 
 export interface DocumentContent {

@@ -726,13 +726,14 @@ export const googleDriveOperations = onRequest({
     // Initialize Google APIs
     const drive = google.drive({ version: 'v3', auth: oauth2Client });
     const docs = google.docs({ version: 'v1', auth: oauth2Client });
+    const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
 
     let result;
     switch (operation) {
       case 'list_files': {
-        // List Google Docs files
+        // List Google Docs and Sheets files
         const response = await drive.files.list({
-          q: "mimeType='application/vnd.google-apps.document' and trashed=false",
+          q: "(mimeType='application/vnd.google-apps.document' or mimeType='application/vnd.google-apps.spreadsheet') and trashed=false",
           spaces: 'drive',
           fields: 'files(id, name, mimeType, createdTime, modifiedTime, webViewLink)',
           pageSize: params?.maxResults || 50,
@@ -747,7 +748,8 @@ export const googleDriveOperations = onRequest({
             createdTime: file.createdTime,
             modifiedTime: file.modifiedTime,
             webViewLink: file.webViewLink,
-            isGoogleDoc: file.mimeType === 'application/vnd.google-apps.document'
+            isGoogleDoc: file.mimeType === 'application/vnd.google-apps.document',
+            isGoogleSheet: file.mimeType === 'application/vnd.google-apps.spreadsheet'
           })) || []
         };
         break;
@@ -914,6 +916,87 @@ export const googleDriveOperations = onRequest({
         result = { 
           documentId: params.documentId, 
           message: 'Document rewritten successfully' 
+        };
+        break;
+      }
+
+      case 'get_sheet': {
+        // Get spreadsheet content
+        const response = await sheets.spreadsheets.get({
+          spreadsheetId: params.documentId,
+          includeGridData: true
+        });
+
+        // Extract data from the first sheet
+        const sheet = response.data.sheets?.[0];
+        const gridData = sheet?.data?.[0];
+        
+        if (!gridData) {
+          result = {
+            documentId: params.documentId,
+            title: response.data.properties?.title || 'Untitled Spreadsheet',
+            content: [],
+            error: 'No data found in spreadsheet'
+          };
+          break;
+        }
+
+        // Convert grid data to text format
+        const rows = gridData.rowData || [];
+        const content = rows.map((row, rowIndex) => {
+          const cells = row.values || [];
+          const cellTexts = cells.map((cell, cellIndex) => {
+            return cell.formattedValue || cell.userEnteredValue?.stringValue || '';
+          });
+          return {
+            type: 'row',
+            text: cellTexts.join('\t'), // Tab-separated values
+            rowIndex: rowIndex + 1
+          };
+        });
+
+        result = {
+          documentId: params.documentId,
+          title: response.data.properties?.title || 'Untitled Spreadsheet',
+          content: content
+        };
+        break;
+      }
+
+      case 'update_sheet': {
+        // Update spreadsheet content
+        const { range, values } = params;
+        
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: params.documentId,
+          range: range || 'A1',
+          valueInputOption: 'RAW',
+          requestBody: {
+            values: values
+          }
+        });
+
+        result = {
+          documentId: params.documentId,
+          message: 'Spreadsheet updated successfully'
+        };
+        break;
+      }
+
+      case 'create_sheet': {
+        // Create new spreadsheet
+        const response = await sheets.spreadsheets.create({
+          requestBody: {
+            properties: {
+              title: params.title || 'New Spreadsheet'
+            }
+          }
+        });
+
+        result = {
+          documentId: response.data.spreadsheetId,
+          title: response.data.properties?.title || 'New Spreadsheet',
+          url: `https://docs.google.com/spreadsheets/d/${response.data.spreadsheetId}/edit`
         };
         break;
       }

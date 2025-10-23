@@ -105,12 +105,12 @@ export default function Home() {
 
   // Load document content when a file is selected
   const loadDocumentContent = async (file: File) => {
-    if (!file.isGoogleDoc) {
+    if (!file.isGoogleDoc && !file.isGoogleSheet) {
       setDocumentContent({ 
         documentId: file.id, 
         title: file.name, 
         content: [], 
-        error: 'This file type is not supported for viewing' 
+        error: 'Only Google Docs and Sheets are supported for viewing' 
       });
       return;
     }
@@ -143,7 +143,7 @@ export default function Home() {
           'Authorization': `Bearer ${idToken}`,
         },
         body: JSON.stringify({
-          operation: 'get_document',
+          operation: file.isGoogleSheet ? 'get_sheet' : 'get_document',
           params: {
             documentId: file.id
           }
@@ -385,6 +385,20 @@ export default function Home() {
     return content.map((item: DocumentContentItem, index: number) => {
       if (!item.text || !item.text.trim()) {
         return null;
+      }
+
+      // Handle spreadsheet rows differently
+      if (item.type === 'row') {
+        const cells = item.text.split('\t');
+        return (
+          <div key={index} className="flex border-b border-gray-200 py-2">
+            {cells.map((cell, cellIndex) => (
+              <div key={cellIndex} className="flex-1 px-2 text-sm text-gray-900 border-r border-gray-100 last:border-r-0">
+                {cell || '\u00A0'} {/* Non-breaking space for empty cells */}
+              </div>
+            ))}
+          </div>
+        );
       }
 
       // If there's a pending edit, use smart text matching
