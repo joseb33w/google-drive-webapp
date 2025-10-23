@@ -90,6 +90,13 @@ function fixCommonJsonIssues(jsonString: string): string {
     
     console.log('Escaped', newlineCount, 'newlines in JSON strings');
     console.log('Final inString state:', inString, '(should be false)');
+    
+    // If we're still in a string at the end, close it
+    if (inString) {
+      result += '"';
+      console.log('Added closing quote to fix unterminated string');
+    }
+    
     fixed = result;
     
     // Fix 2: Try to find and close unclosed objects/arrays
@@ -851,24 +858,29 @@ export const googleDriveOperations = onRequest({
         }, 1) || 1;
         
         // Create batch update: delete all content, then insert new content
-        const requests = [
-          {
+        const requests = [];
+        
+        // Only delete content if the document has content (endIndex > 1)
+        if (endIndex > 1) {
+          requests.push({
             deleteContentRange: {
               range: {
                 startIndex: 1,
                 endIndex: endIndex - 1 // Don't delete the final newline
               }
             }
-          },
-          {
-            insertText: {
-              location: {
-                index: 1
-              },
-              text: params.newContent
-            }
+          });
+        }
+        
+        // Always insert the new content
+        requests.push({
+          insertText: {
+            location: {
+              index: 1
+            },
+            text: params.newContent
           }
-        ];
+        });
         
         await docs.documents.batchUpdate({
           documentId: params.documentId,
