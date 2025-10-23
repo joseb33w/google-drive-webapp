@@ -381,16 +381,29 @@ export const chatHttp = onRequest({
     }
 
     // Build the system prompt
-    let systemPrompt = `You are an advanced AI editor similar to Cursor with FULL document editing capabilities.
+    let systemPrompt = `You are an advanced AI editor similar to Cursor with FULL document and spreadsheet editing capabilities.
 
 EDITING CAPABILITIES:
-You can perform ANY of these operations on the document:
+You can perform ANY of these operations on documents and spreadsheets:
+
+DOCUMENT OPERATIONS:
 - "replace": Find and replace specific text (for small targeted changes)
 - "insert": Add new text at a specific location
 - "delete": Remove specific text
 - "rewrite": COMPLETELY REWRITE the entire document (for major restructuring or full rewrites)
 
+SPREADSHEET OPERATIONS:
+- "update_cell": Update a specific cell value (e.g., A1, B2, etc.)
+- "update_range": Update multiple cells in a range (e.g., A1:C3)
+- "insert_row": Insert a new row at a specific position
+- "insert_column": Insert a new column at a specific position
+- "delete_row": Delete a specific row
+- "delete_column": Delete a specific column
+- "update_formula": Update or add formulas to cells
+- "format_cell": Apply formatting to cells (bold, italic, color, etc.)
+
 WHEN TO USE EACH TYPE:
+DOCUMENT EDITS:
 - Use "replace" for small, targeted changes to existing text
 - Use "insert" to add new content at the end or middle of document
 - Use "delete" to remove specific sections
@@ -400,6 +413,14 @@ WHEN TO USE EACH TYPE:
   * Make major organizational changes
   * Change the document's overall structure or flow
   * Transform the document's format or style completely
+
+SPREADSHEET EDITS:
+- Use "update_cell" for single cell changes
+- Use "update_range" for updating multiple related cells
+- Use "insert_row"/"insert_column" to add new data structure
+- Use "delete_row"/"delete_column" to remove data
+- Use "update_formula" for calculations and data analysis
+- Use "format_cell" for visual improvements
 
 PRECISION REQUIREMENTS:
 - For "replace" edits: Include 2-3 words of surrounding context for unique matching
@@ -474,6 +495,68 @@ Return JSON format for COMPLETE REWRITES:
   }
 }
 
+Return JSON format for SPREADSHEET OPERATIONS:
+
+For updating a single cell:
+{
+  "response": "Brief explanation of what you're changing and why",
+  "edit": {
+    "type": "update_cell",
+    "cell": "A1",
+    "value": "new value",
+    "confidence": "high",
+    "reasoning": "Why this cell needs to be updated"
+  }
+}
+
+For updating a range of cells:
+{
+  "response": "Brief explanation of what you're changing and why",
+  "edit": {
+    "type": "update_range",
+    "range": "A1:C3",
+    "values": [["Header1", "Header2", "Header3"], ["Data1", "Data2", "Data3"], ["Data4", "Data5", "Data6"]],
+    "confidence": "high",
+    "reasoning": "Why this range needs to be updated"
+  }
+}
+
+For inserting a row:
+{
+  "response": "Brief explanation of what you're changing and why",
+  "edit": {
+    "type": "insert_row",
+    "position": 2,
+    "values": ["New", "Row", "Data"],
+    "confidence": "high",
+    "reasoning": "Why a new row is needed at this position"
+  }
+}
+
+For inserting a column:
+{
+  "response": "Brief explanation of what you're changing and why",
+  "edit": {
+    "type": "insert_column",
+    "position": 1,
+    "values": ["New", "Column", "Data"],
+    "confidence": "high",
+    "reasoning": "Why a new column is needed at this position"
+  }
+}
+
+For updating formulas:
+{
+  "response": "Brief explanation of what you're changing and why",
+  "edit": {
+    "type": "update_formula",
+    "cell": "C1",
+    "formula": "=A1+B1",
+    "confidence": "high",
+    "reasoning": "Why this formula is needed"
+  }
+}
+
 COMPLETION REQUIREMENTS:
 - ALWAYS write complete, finished content - never leave sentences or thoughts incomplete
 - For historical topics: Cover the full timeline from beginning to end
@@ -489,7 +572,28 @@ For non-edit requests, respond with plain text.`;
       systemPrompt += `\n\nCurrent document context:
 - Document ID: ${documentContext.id}
 - Document Name: ${documentContext.name}
-- Content: ${documentContext.content || 'No content available'}`;
+- Document Type: ${documentContext.mimeType || 'Unknown'}`;
+      
+      if (documentContext.mimeType === 'application/vnd.google-apps.document') {
+        systemPrompt += `\n- Content: ${documentContext.content || 'No content available'}`;
+      } else if (documentContext.mimeType === 'application/vnd.google-apps.spreadsheet' && documentContext.spreadsheetData) {
+        systemPrompt += `\n- Spreadsheet Data:
+  * Current Sheet: ${documentContext.spreadsheetData.sheetTitle} (ID: ${documentContext.spreadsheetData.sheetId})
+  * Grid Size: ${documentContext.spreadsheetData.gridProperties?.rowCount || 'Unknown'} rows × ${documentContext.spreadsheetData.gridProperties?.columnCount || 'Unknown'} columns
+  * Available Sheets: ${documentContext.spreadsheetData.allSheets?.map((s: any) => s.title).join(', ') || 'Unknown'}
+  * Current Data (first 10 rows):`;
+        
+        // Include first 10 rows of spreadsheet data for context
+        if (documentContext.spreadsheetData.rows && documentContext.spreadsheetData.rows.length > 0) {
+          const displayRows = documentContext.spreadsheetData.rows.slice(0, 10);
+          displayRows.forEach((row: any, index: number) => {
+            const rowData = row.map((cell: any) => cell || '').join(' | ');
+            systemPrompt += `\n    Row ${index + 1}: ${rowData}`;
+          });
+        } else {
+          systemPrompt += `\n    No data found in current sheet`;
+        }
+      }
     }
 
     // Build the conversation history (without system message)
@@ -1017,6 +1121,203 @@ export const googleDriveOperations = onRequest({
           documentId: response.data.spreadsheetId,
           title: response.data.properties?.title || 'New Spreadsheet',
           url: `https://docs.google.com/spreadsheets/d/${response.data.spreadsheetId}/edit`
+        };
+        break;
+      }
+
+      case 'update_cell': {
+        // Update a single cell
+        const { cell, value } = params;
+        
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: params.documentId,
+          range: cell,
+          valueInputOption: 'RAW',
+          requestBody: {
+            values: [[value]]
+          }
+        });
+
+        result = {
+          documentId: params.documentId,
+          message: `Cell ${cell} updated successfully`
+        };
+        break;
+      }
+
+      case 'update_range': {
+        // Update a range of cells
+        const { range, values } = params;
+        
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: params.documentId,
+          range: range,
+          valueInputOption: 'RAW',
+          requestBody: {
+            values: values
+          }
+        });
+
+        result = {
+          documentId: params.documentId,
+          message: `Range ${range} updated successfully`
+        };
+        break;
+      }
+
+      case 'insert_row': {
+        // Insert a new row
+        const { position, values } = params;
+        
+        // First, insert the row
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId: params.documentId,
+          requestBody: {
+            requests: [{
+              insertDimension: {
+                range: {
+                  sheetId: params.sheetId || 0,
+                  dimension: 'ROWS',
+                  startIndex: position - 1,
+                  endIndex: position
+                }
+              }
+            }]
+          }
+        });
+
+        // Then, if values are provided, update the new row
+        if (values && values.length > 0) {
+          const rowRange = `${String.fromCharCode(65)}${position}:${String.fromCharCode(65 + values.length - 1)}${position}`;
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: params.documentId,
+            range: rowRange,
+            valueInputOption: 'RAW',
+            requestBody: {
+              values: [values]
+            }
+          });
+        }
+
+        result = {
+          documentId: params.documentId,
+          message: `Row inserted at position ${position} successfully`
+        };
+        break;
+      }
+
+      case 'insert_column': {
+        // Insert a new column
+        const { position, values } = params;
+        
+        // First, insert the column
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId: params.documentId,
+          requestBody: {
+            requests: [{
+              insertDimension: {
+                range: {
+                  sheetId: params.sheetId || 0,
+                  dimension: 'COLUMNS',
+                  startIndex: position - 1,
+                  endIndex: position
+                }
+              }
+            }]
+          }
+        });
+
+        // Then, if values are provided, update the new column
+        if (values && values.length > 0) {
+          const columnLetter = String.fromCharCode(65 + position - 1);
+          const columnRange = `${columnLetter}1:${columnLetter}${values.length}`;
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: params.documentId,
+            range: columnRange,
+            valueInputOption: 'RAW',
+            requestBody: {
+              values: values.map((value: any) => [value])
+            }
+          });
+        }
+
+        result = {
+          documentId: params.documentId,
+          message: `Column inserted at position ${position} successfully`
+        };
+        break;
+      }
+
+      case 'delete_row': {
+        // Delete a row
+        const { position } = params;
+        
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId: params.documentId,
+          requestBody: {
+            requests: [{
+              deleteDimension: {
+                range: {
+                  sheetId: params.sheetId || 0,
+                  dimension: 'ROWS',
+                  startIndex: position - 1,
+                  endIndex: position
+                }
+              }
+            }]
+          }
+        });
+
+        result = {
+          documentId: params.documentId,
+          message: `Row ${position} deleted successfully`
+        };
+        break;
+      }
+
+      case 'delete_column': {
+        // Delete a column
+        const { position } = params;
+        
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId: params.documentId,
+          requestBody: {
+            requests: [{
+              deleteDimension: {
+                range: {
+                  sheetId: params.sheetId || 0,
+                  dimension: 'COLUMNS',
+                  startIndex: position - 1,
+                  endIndex: position
+                }
+              }
+            }]
+          }
+        });
+
+        result = {
+          documentId: params.documentId,
+          message: `Column ${position} deleted successfully`
+        };
+        break;
+      }
+
+      case 'update_formula': {
+        // Update or add a formula to a cell
+        const { cell, formula } = params;
+        
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: params.documentId,
+          range: cell,
+          valueInputOption: 'USER_ENTERED', // Use USER_ENTERED for formulas
+          requestBody: {
+            values: [[formula]]
+          }
+        });
+
+        result = {
+          documentId: params.documentId,
+          message: `Formula added to cell ${cell} successfully`
         };
         break;
       }

@@ -22,8 +22,16 @@ export default function Home() {
   const [pendingEdit, setPendingEdit] = useState<{
     messageId: string;
     type: string;
-    findText: string;
-    replaceText: string;
+    findText?: string;
+    replaceText?: string;
+    newContent?: string;
+    position?: number;
+    cell?: string;
+    range?: string;
+    value?: string;
+    values?: string[][] | string[];
+    formula?: string;
+    sheetId?: number;
   } | null>(null);
   const [isApplyingEdit, setIsApplyingEdit] = useState(false);
   
@@ -272,14 +280,7 @@ export default function Home() {
       
       // Determine operation and params based on edit type
       let operation: string;
-      let params: {
-        documentId: string;
-        findText?: string;
-        replaceWithText?: string;
-        newContent?: string;
-        text?: string;
-        position?: number;
-      };
+      let params: any;
       
       switch (message.editProposal.type) {
         case 'rewrite':
@@ -305,6 +306,75 @@ export default function Home() {
           };
           break;
         case 'replace':
+          operation = 'replace_text';
+          params = {
+            documentId: selectedFile.id,
+            findText: message.editProposal.findText,
+            replaceWithText: message.editProposal.replaceText
+          };
+          break;
+        // Spreadsheet operations
+        case 'update_cell':
+          operation = 'update_cell';
+          params = {
+            documentId: selectedFile.id,
+            cell: message.editProposal.cell,
+            value: message.editProposal.value,
+            sheetId: message.editProposal.sheetId
+          };
+          break;
+        case 'update_range':
+          operation = 'update_range';
+          params = {
+            documentId: selectedFile.id,
+            range: message.editProposal.range,
+            values: message.editProposal.values,
+            sheetId: message.editProposal.sheetId
+          };
+          break;
+        case 'insert_row':
+          operation = 'insert_row';
+          params = {
+            documentId: selectedFile.id,
+            position: message.editProposal.position,
+            values: message.editProposal.values,
+            sheetId: message.editProposal.sheetId
+          };
+          break;
+        case 'insert_column':
+          operation = 'insert_column';
+          params = {
+            documentId: selectedFile.id,
+            position: message.editProposal.position,
+            values: message.editProposal.values,
+            sheetId: message.editProposal.sheetId
+          };
+          break;
+        case 'delete_row':
+          operation = 'delete_row';
+          params = {
+            documentId: selectedFile.id,
+            position: message.editProposal.position,
+            sheetId: message.editProposal.sheetId
+          };
+          break;
+        case 'delete_column':
+          operation = 'delete_column';
+          params = {
+            documentId: selectedFile.id,
+            position: message.editProposal.position,
+            sheetId: message.editProposal.sheetId
+          };
+          break;
+        case 'update_formula':
+          operation = 'update_formula';
+          params = {
+            documentId: selectedFile.id,
+            cell: message.editProposal.cell,
+            formula: message.editProposal.formula,
+            sheetId: message.editProposal.sheetId
+          };
+          break;
         default:
           operation = 'replace_text';
           params = {
@@ -452,7 +522,7 @@ export default function Home() {
       }
 
       // If there's a pending edit, use smart text matching
-      if (pendingEdit) {
+      if (pendingEdit && pendingEdit.findText) {
         const match = findTextWithFuzzyMatching(content, pendingEdit.findText);
         
         if (match && match.paragraphIndex === index) {

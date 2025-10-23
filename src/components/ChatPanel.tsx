@@ -7,8 +7,16 @@ import { ErrorToast, useErrorToast } from './ErrorToast';
 interface EditProposal {
   messageId: string;
   type: string;
-  findText: string;
-  replaceText: string;
+  findText?: string;
+  replaceText?: string;
+  newContent?: string;
+  position?: number;
+  cell?: string;
+  range?: string;
+  value?: string;
+  values?: string[][] | string[];
+  formula?: string;
+  sheetId?: number;
 }
 
 interface ChatPanelProps {
@@ -85,7 +93,20 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
           documentContext: selectedFile && documentContent ? {
             id: selectedFile.id,
             name: selectedFile.name,
-            content: documentContent.content?.map((item: DocumentContentItem) => item.text).join('\n') || 'No content available'
+            mimeType: selectedFile.mimeType,
+            content: documentContent.content?.map((item: DocumentContentItem) => item.text).join('\n') || 'No content available',
+            // Include spreadsheet data if it's a Google Sheet
+            spreadsheetData: selectedFile.isGoogleSheet && documentContent.activeSheet ? {
+              sheetId: documentContent.activeSheet.sheetId,
+              sheetTitle: documentContent.activeSheet.title,
+              rows: documentContent.activeSheet.rows,
+              gridProperties: documentContent.activeSheet.gridProperties,
+              allSheets: documentContent.sheets?.map(sheet => ({
+                sheetId: sheet.sheetId,
+                title: sheet.title,
+                gridProperties: sheet.gridProperties
+              }))
+            } : null
           } : null,
           chatHistory: newMessages.slice(-10), // Send last 10 messages for context
           idToken: idToken, // Pass ID token to API route
@@ -117,7 +138,14 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
           position: data.edit.position,
           confidence: data.edit.confidence,
           reasoning: data.edit.reasoning,
-          status: 'pending'
+          status: 'pending',
+          // Spreadsheet-specific fields
+          cell: data.edit.cell,
+          range: data.edit.range,
+          value: data.edit.value,
+          values: data.edit.values,
+          formula: data.edit.formula,
+          sheetId: data.edit.sheetId
         };
         
         // Notify parent component about the edit proposal
@@ -125,7 +153,15 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
           messageId: assistantMessage.id,
           type: data.edit.type,
           findText: data.edit.findText,
-          replaceText: data.edit.replaceText
+          replaceText: data.edit.replaceText,
+          newContent: data.edit.newContent,
+          position: data.edit.position,
+          cell: data.edit.cell,
+          range: data.edit.range,
+          value: data.edit.value,
+          values: data.edit.values,
+          formula: data.edit.formula,
+          sheetId: data.edit.sheetId
         });
       }
 
@@ -225,12 +261,28 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
                            message.editProposal.type === 'rewrite' ? 'bg-purple-100 text-purple-800' :
                            message.editProposal.type === 'replace' ? 'bg-blue-100 text-blue-800' :
                            message.editProposal.type === 'insert' ? 'bg-green-100 text-green-800' :
-                           'bg-red-100 text-red-800'
+                           message.editProposal.type === 'delete' ? 'bg-red-100 text-red-800' :
+                           message.editProposal.type === 'update_cell' ? 'bg-orange-100 text-orange-800' :
+                           message.editProposal.type === 'update_range' ? 'bg-indigo-100 text-indigo-800' :
+                           message.editProposal.type === 'insert_row' ? 'bg-emerald-100 text-emerald-800' :
+                           message.editProposal.type === 'insert_column' ? 'bg-teal-100 text-teal-800' :
+                           message.editProposal.type === 'delete_row' ? 'bg-rose-100 text-rose-800' :
+                           message.editProposal.type === 'delete_column' ? 'bg-pink-100 text-pink-800' :
+                           message.editProposal.type === 'update_formula' ? 'bg-cyan-100 text-cyan-800' :
+                           'bg-gray-100 text-gray-800'
                          }`}>
                            {message.editProposal.type === 'rewrite' ? '🔄 Complete Rewrite' :
                             message.editProposal.type === 'replace' ? '✏️ Replace' :
                             message.editProposal.type === 'insert' ? '➕ Insert' :
-                            '🗑️ Delete'}
+                            message.editProposal.type === 'delete' ? '🗑️ Delete' :
+                            message.editProposal.type === 'update_cell' ? '📝 Update Cell' :
+                            message.editProposal.type === 'update_range' ? '📊 Update Range' :
+                            message.editProposal.type === 'insert_row' ? '➕ Insert Row' :
+                            message.editProposal.type === 'insert_column' ? '➕ Insert Column' :
+                            message.editProposal.type === 'delete_row' ? '🗑️ Delete Row' :
+                            message.editProposal.type === 'delete_column' ? '🗑️ Delete Column' :
+                            message.editProposal.type === 'update_formula' ? '🧮 Update Formula' :
+                            '✏️ Edit'}
                          </span>
                        </div>
                        
@@ -252,6 +304,26 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
                        {message.editProposal.reasoning && (
                          <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
                            <strong>Reasoning:</strong> {message.editProposal.reasoning}
+                         </div>
+                       )}
+                       
+                       {/* Spreadsheet Edit Details */}
+                       {(message.editProposal.type.startsWith('update_') || message.editProposal.type.startsWith('insert_') || message.editProposal.type.startsWith('delete_')) && (
+                         <div className="text-xs text-gray-600 bg-blue-50 p-2 rounded">
+                           <strong>Edit Details:</strong>
+                           {message.editProposal.cell && <div>Cell: {message.editProposal.cell}</div>}
+                           {message.editProposal.range && <div>Range: {message.editProposal.range}</div>}
+                           {message.editProposal.value && <div>Value: {message.editProposal.value}</div>}
+                           {message.editProposal.formula && <div>Formula: {message.editProposal.formula}</div>}
+                           {message.editProposal.position && <div>Position: {message.editProposal.position}</div>}
+                           {message.editProposal.values && (
+                             <div>
+                               Values: {Array.isArray(message.editProposal.values[0]) 
+                                 ? `[${(message.editProposal.values as string[][]).map(row => `[${row.join(', ')}]`).join(', ')}]`
+                                 : `[${(message.editProposal.values as string[]).join(', ')}]`
+                               }
+                             </div>
+                           )}
                          </div>
                        )}
                        
