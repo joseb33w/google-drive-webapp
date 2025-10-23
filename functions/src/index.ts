@@ -551,6 +551,39 @@ CRITICAL: PREFER STATIC VALUES OVER COMPLEX FORMULAS:
 - Example: If you know the total revenue is 15000, use "15000" instead of =SUM('Sheet1'!A:A)
 - Only use formulas when you're 100% certain the referenced cells exist and contain data
 
+FORMULA STRATEGY GUIDE:
+WHEN TO USE DIFFERENT EXCEL FUNCTIONS:
+
+1. BASIC CALCULATIONS (Use these first):
+   - SUM: For adding numbers =SUM(A1:A10)
+   - AVERAGE: For finding averages =AVERAGE(B1:B10)
+   - COUNT: For counting items =COUNT(C1:C10)
+   - Simple arithmetic: =A1+B1, =A1/B1, =A1*B1
+
+2. CONDITIONAL LOGIC (When you need IF statements):
+   - IF: For conditional results =IF(A1>100, "High", "Low")
+   - AND/OR: For multiple conditions =AND(A1>0, B1>0)
+
+3. DATA ANALYSIS (When analyzing existing data):
+   - COUNTIF: Count cells meeting criteria =COUNTIF(A1:A10, ">100")
+   - SUMIF: Sum cells meeting criteria =SUMIF(A1:A10, ">100", B1:B10)
+   - MAX/MIN: Find highest/lowest values =MAX(D1:D10)
+
+4. CROSS-SHEET OPERATIONS (When referencing other sheets):
+   - Always use single quotes: =SUM('Sheet1'!A1:A10)
+   - Validate sheet exists in "Available Sheets" first
+   - Use specific ranges, not entire columns
+
+5. TEXT OPERATIONS (When working with text data):
+   - CONCATENATE: Join text =CONCATENATE(A1, " ", B1)
+   - LEFT/RIGHT: Extract characters =LEFT(A1, 5)
+   - LEN: Get text length =LEN(A1)
+
+6. DATE/TIME (When working with dates):
+   - TODAY: Current date =TODAY()
+   - NOW: Current date/time =NOW()
+   - DATE: Create dates =DATE(2025, 10, 23)
+
 DATA VALIDATION BEFORE FORMULAS:
 - ALWAYS check the "Current Data" section to see what data actually exists
 - If you see "Row 1: Header1 | Header2 | Header3", then columns A, B, C have data
@@ -621,6 +654,42 @@ For cross-sheet formulas with validation:
   }
 }
 
+For business calculations using Excel functions:
+{
+  "response": "Adding business calculation using Excel functions",
+  "edit": {
+    "type": "update_cell",
+    "cell": "E5",
+    "value": "=IF(SUM(B1:B4)>1000, \"High Volume\", \"Low Volume\")",
+    "confidence": "high",
+    "reasoning": "Using IF function with SUM to categorize based on total volume"
+  }
+}
+
+For financial analysis formulas:
+{
+  "response": "Adding financial analysis with Excel functions",
+  "edit": {
+    "type": "update_cell",
+    "cell": "F8",
+    "value": "=ROUND(AVERAGE(C1:C10), 2)",
+    "confidence": "high",
+    "reasoning": "Using AVERAGE and ROUND functions for precise financial calculations"
+  }
+}
+
+For data lookup operations:
+{
+  "response": "Adding lookup formula for data analysis",
+  "edit": {
+    "type": "update_cell",
+    "cell": "G12",
+    "value": "=COUNTIF('INVENTORY'!F1:F20, \"Reorder\")",
+    "confidence": "high",
+    "reasoning": "Using COUNTIF to count items needing reorder from INVENTORY sheet"
+  }
+}
+
 For updating ranges with correct column count (CRITICAL):
 {
   "response": "Updating summary data with proper range validation",
@@ -671,6 +740,43 @@ FORMULA PRECISION RULES:
 - Example: If context shows "Row 1: Revenue | 1000 | 2000", use =SUM(B1:C1) not =SUM(B:B)
 - NEVER use entire column references (A:A, B:B) unless you're certain the column has data
 - Use specific ranges based on the actual data shown in the spreadsheet context
+
+EXCEL FUNCTIONS REFERENCE (Based on Microsoft Excel Functions):
+COMMON MATHEMATICAL FUNCTIONS:
+- SUM(range): Adds all numbers in a range =SUM(A1:A10)
+- AVERAGE(range): Returns average of numbers =AVERAGE(B1:B10)
+- COUNT(range): Counts numbers in range =COUNT(C1:C10)
+- MAX(range): Returns largest value =MAX(D1:D10)
+- MIN(range): Returns smallest value =MIN(E1:E10)
+- ROUND(number, digits): Rounds to specified digits =ROUND(F1, 2)
+
+LOGICAL FUNCTIONS:
+- IF(condition, true_value, false_value): Conditional logic =IF(A1>100, "High", "Low")
+- AND(condition1, condition2): Returns TRUE if all conditions true =AND(A1>0, B1>0)
+- OR(condition1, condition2): Returns TRUE if any condition true =OR(A1>100, B1>100)
+
+LOOKUP FUNCTIONS:
+- VLOOKUP(value, table, column, exact): Vertical lookup =VLOOKUP(A1, Sheet1!A:C, 3, FALSE)
+- HLOOKUP(value, table, row, exact): Horizontal lookup =HLOOKUP(A1, Sheet1!1:3, 2, FALSE)
+- INDEX(array, row, column): Returns value at intersection =INDEX(A1:C10, 2, 3)
+- MATCH(value, array, type): Returns position of value =MATCH(A1, B1:B10, 0)
+
+TEXT FUNCTIONS:
+- CONCATENATE(text1, text2): Joins text =CONCATENATE(A1, " ", B1)
+- LEFT(text, num_chars): Returns left characters =LEFT(A1, 5)
+- RIGHT(text, num_chars): Returns right characters =RIGHT(A1, 5)
+- LEN(text): Returns text length =LEN(A1)
+
+DATE/TIME FUNCTIONS:
+- TODAY(): Returns current date =TODAY()
+- NOW(): Returns current date and time =NOW()
+- DATE(year, month, day): Creates date =DATE(2025, 10, 23)
+- YEAR(date): Extracts year =YEAR(A1)
+
+STATISTICAL FUNCTIONS:
+- COUNTIF(range, criteria): Counts cells meeting criteria =COUNTIF(A1:A10, ">100")
+- SUMIF(range, criteria, sum_range): Sums cells meeting criteria =SUMIF(A1:A10, ">100", B1:B10)
+- AVERAGEIF(range, criteria, average_range): Averages cells meeting criteria =AVERAGEIF(A1:A10, ">100", B1:B10)
 
 CRITICAL FORMULA VALIDATION:
 - ONLY reference sheets that are listed in "Available Sheets" in the spreadsheet context
