@@ -616,19 +616,18 @@ export default function Home() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto min-h-0 bg-white">
-          <ChatPanel 
-            selectedFile={selectedFile}
-            documentContent={documentContent}
-            chatHistory={chatHistory}
-            onChatUpdate={setChatHistory}
-            onEditProposal={setPendingEdit}
-            onAcceptEdit={handleAcceptEdit}
-            onRejectEdit={handleRejectEdit}
-            selectedModel={selectedModel}
-            onModelChange={setSelectedModel}
-            isApplyingEdit={isApplyingEdit}
-            user={user}
-          />
+            <ChatPanel 
+              selectedFile={selectedFile}
+              documentContent={documentContent}
+              chatHistory={chatHistory}
+              onChatUpdate={setChatHistory}
+              onEditProposal={setPendingEdit}
+              onAcceptEdit={handleAcceptEdit}
+              onRejectEdit={handleRejectEdit}
+              selectedModel={selectedModel}
+              onModelChange={setSelectedModel}
+              isApplyingEdit={isApplyingEdit}
+            />
         </div>
       </div>
       

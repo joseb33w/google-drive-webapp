@@ -22,10 +22,9 @@ interface ChatPanelProps {
   selectedModel: string;
   onModelChange: (model: string) => void;
   isApplyingEdit?: boolean;
-  user: AuthUser | null;
 }
 
-export default function ChatPanel({ selectedFile, documentContent, chatHistory, onChatUpdate, onEditProposal, onAcceptEdit, onRejectEdit, selectedModel, onModelChange, isApplyingEdit = false, user }: ChatPanelProps) {
+export default function ChatPanel({ selectedFile, documentContent, chatHistory, onChatUpdate, onEditProposal, onAcceptEdit, onRejectEdit, selectedModel, onModelChange, isApplyingEdit = false }: ChatPanelProps) {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
