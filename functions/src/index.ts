@@ -529,7 +529,19 @@ For updating cells with cross-sheet formulas:
     "range": "A1:D3",
     "values": [["Product", "Units Sold", "Price", "Revenue"], ["Laptop Pro", "='Sheet1'!B5", "1499.99", "=B2*C2"], ["Mouse", "='Sheet1'!C5", "49.99", "=B3*C3"]],
     "confidence": "high",
-    "reasoning": "Using proper sheet reference syntax with single quotes"
+    "reasoning": "Using proper sheet reference syntax with single quotes around ALL sheet names"
+  }
+}
+
+For updating cells with COUNTIF and other functions referencing other sheets:
+{
+  "response": "Adding COUNTIF formulas to count items from other sheets",
+  "edit": {
+    "type": "update_cell",
+    "cell": "B8",
+    "value": "=COUNTIF('INVENTORY'!F:F, \"Reorder\")",
+    "confidence": "high",
+    "reasoning": "Using single quotes around sheet name INVENTORY in COUNTIF function"
   }
 }
 
@@ -543,8 +555,19 @@ CROSS-SHEET FORMULAS: When referencing other sheets in formulas, use the correct
 - To reference a cell from another sheet: ='SheetName'!A1 (use single quotes around sheet name)
 - To reference a range from another sheet: ='SheetName'!A1:B10
 - For functions with sheet references: =SUM('Sheet1'!A1:A10) or =COUNTIF('INVENTORY'!F:F, "Reorder")
-- Always use single quotes around sheet names that contain spaces or special characters
-- Example: ='Sheet 1'!B5 (not =Sheet1!B5 if the sheet name has spaces)
+- ALWAYS use single quotes around sheet names, even in function arguments
+- Sheet names with spaces MUST be quoted: ='My Sheet'!A1
+- Sheet names without spaces should STILL be quoted for consistency: ='INVENTORY'!F:F
+
+CRITICAL: ALL sheet references in formulas MUST use single quotes around the sheet name:
+✅ CORRECT: =SUM('Sheet1'!D:D)
+✅ CORRECT: =COUNTIF('INVENTORY'!F:F, "Reorder")
+✅ CORRECT: ='Sheet1'!B5
+❌ WRONG: =SUM(Sheet1!D:D)
+❌ WRONG: =COUNTIF(INVENTORY!F:F, "Reorder")
+❌ WRONG: =Sheet1!B5
+
+This is MANDATORY - Google Sheets requires single quotes around sheet names in cross-sheet references.
 
 For inserting a row:
 {
