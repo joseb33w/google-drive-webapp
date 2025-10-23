@@ -921,7 +921,7 @@ export const googleDriveOperations = onRequest({
       }
 
       case 'get_sheet': {
-        // Get spreadsheet content
+        // Get spreadsheet content - Google Sheets integration is now live!
         const response = await sheets.spreadsheets.get({
           spreadsheetId: params.documentId,
           includeGridData: true
