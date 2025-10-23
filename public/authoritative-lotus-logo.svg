@@ -1,0 +1,217 @@
+<svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Nebula-like cosmic gradients -->
+    <radialGradient id="nebulaPetal1" cx="50%" cy="40%">
+      <stop offset="0%" style="stop-color:#f0fdfa;stop-opacity:0.95" />
+      <stop offset="20%" style="stop-color:#a7f3d0;stop-opacity:0.9" />
+      <stop offset="45%" style="stop-color:#34d399;stop-opacity:0.85" />
+      <stop offset="70%" style="stop-color:#10b981;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#047857;stop-opacity:0.75" />
+    </radialGradient>
+    
+    <radialGradient id="nebulaPetal2" cx="50%" cy="40%">
+      <stop offset="0%" style="stop-color:#ecfeff;stop-opacity:0.95" />
+      <stop offset="20%" style="stop-color:#67e8f9;stop-opacity:0.9" />
+      <stop offset="45%" style="stop-color:#06b6d4;stop-opacity:0.85" />
+      <stop offset="70%" style="stop-color:#0891b2;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#155e75;stop-opacity:0.75" />
+    </radialGradient>
+    
+    <radialGradient id="nebulaPetal3" cx="50%" cy="40%">
+      <stop offset="0%" style="stop-color:#f0fdfa;stop-opacity:0.95" />
+      <stop offset="20%" style="stop-color:#5eead4;stop-opacity:0.9" />
+      <stop offset="45%" style="stop-color:#14b8a6;stop-opacity:0.85" />
+      <stop offset="70%" style="stop-color:#0d9488;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#115e59;stop-opacity:0.75" />
+    </radialGradient>
+    
+    <!-- Cosmic glow effect -->
+    <radialGradient id="cosmicGlow" cx="40%" cy="30%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.9" />
+      <stop offset="20%" style="stop-color:#a7f3d0;stop-opacity:0.6" />
+      <stop offset="50%" style="stop-color:#34d399;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:0" />
+    </radialGradient>
+    
+    <!-- Stardust particles -->
+    <radialGradient id="stardust" cx="50%" cy="50%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.95" />
+      <stop offset="50%" style="stop-color:#d1fae5;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:0" />
+    </radialGradient>
+    
+    <!-- Nebula center -->
+    <radialGradient id="nebulaCore" cx="50%" cy="50%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="15%" style="stop-color:#f0fdfa;stop-opacity:0.95" />
+      <stop offset="35%" style="stop-color:#99f6e4;stop-opacity:0.9" />
+      <stop offset="60%" style="stop-color:#2dd4bf;stop-opacity:0.85" />
+      <stop offset="100%" style="stop-color:#0891b2;stop-opacity:0.8" />
+    </radialGradient>
+    
+    <!-- Energy wisps -->
+    <radialGradient id="energyWisp" cx="30%" cy="30%">
+      <stop offset="0%" style="stop-color:#a7f3d0;stop-opacity:0.7" />
+      <stop offset="50%" style="stop-color:#34d399;stop-opacity:0.4" />
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:0" />
+    </radialGradient>
+    
+    <!-- Rim shine with cosmic purple tint -->
+    <linearGradient id="cosmicRim" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#a7f3d0;stop-opacity:0.6" />
+      <stop offset="50%" style="stop-color:#2dd4bf;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#155e75;stop-opacity:0.5" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Outer glow/nebula field -->
+  <circle cx="400" cy="400" r="380" fill="url(#stardust)" opacity="0.3"/>
+  
+  <!-- Stardust particles scattered around -->
+  <circle cx="150" cy="200" r="3" fill="#ffffff" opacity="0.9"/>
+  <circle cx="650" cy="250" r="2" fill="#a7f3d0" opacity="0.8"/>
+  <circle cx="200" cy="600" r="2.5" fill="#ffffff" opacity="0.85"/>
+  <circle cx="600" cy="150" r="2" fill="#67e8f9" opacity="0.9"/>
+  <circle cx="700" cy="500" r="3" fill="#ffffff" opacity="0.8"/>
+  <circle cx="100" cy="400" r="2" fill="#5eead4" opacity="0.9"/>
+  <circle cx="250" cy="100" r="2.5" fill="#ffffff" opacity="0.85"/>
+  <circle cx="550" cy="650" r="2" fill="#a7f3d0" opacity="0.8"/>
+  <circle cx="180" cy="450" r="1.5" fill="#ffffff" opacity="0.9"/>
+  <circle cx="620" cy="380" r="2" fill="#67e8f9" opacity="0.85"/>
+  
+  <!-- Outer layer - 8 petals (nebula teal) -->
+  <g transform="translate(400, 400)">
+    <!-- Petal 1 - Top -->
+    <ellipse cx="0" cy="-200" rx="85" ry="130" fill="url(#nebulaPetal3)" transform="rotate(0 0 -200)"/>
+    <ellipse cx="-15" cy="-220" rx="40" ry="55" fill="url(#cosmicGlow)" transform="rotate(0 -15 -220)"/>
+    <ellipse cx="0" cy="-200" rx="75" ry="115" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(0 0 -200)"/>
+    <ellipse cx="10" cy="-190" rx="20" ry="35" fill="url(#energyWisp)" transform="rotate(-10 10 -190)"/>
+    
+    <!-- Petal 2 - Top Right -->
+    <ellipse cx="141" cy="-141" rx="85" ry="130" fill="url(#nebulaPetal3)" transform="rotate(45 141 -141)"/>
+    <ellipse cx="130" cy="-156" rx="40" ry="55" fill="url(#cosmicGlow)" transform="rotate(45 130 -156)"/>
+    <ellipse cx="141" cy="-141" rx="75" ry="115" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(45 141 -141)"/>
+    <ellipse cx="148" cy="-135" rx="20" ry="35" fill="url(#energyWisp)" transform="rotate(35 148 -135)"/>
+    
+    <!-- Petal 3 - Right -->
+    <ellipse cx="200" cy="0" rx="85" ry="130" fill="url(#nebulaPetal2)" transform="rotate(90 200 0)"/>
+    <ellipse cx="220" cy="-15" rx="40" ry="55" fill="url(#cosmicGlow)" transform="rotate(90 220 -15)"/>
+    <ellipse cx="200" cy="0" rx="75" ry="115" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(90 200 0)"/>
+    <ellipse cx="190" cy="10" rx="20" ry="35" fill="url(#energyWisp)" transform="rotate(80 190 10)"/>
+    
+    <!-- Petal 4 - Bottom Right -->
+    <ellipse cx="141" cy="141" rx="85" ry="130" fill="url(#nebulaPetal2)" transform="rotate(135 141 141)"/>
+    <ellipse cx="156" cy="130" rx="40" ry="55" fill="url(#cosmicGlow)" transform="rotate(135 156 130)"/>
+    <ellipse cx="141" cy="141" rx="75" ry="115" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(135 141 141)"/>
+    <ellipse cx="135" cy="148" rx="20" ry="35" fill="url(#energyWisp)" transform="rotate(125 135 148)"/>
+    
+    <!-- Petal 5 - Bottom -->
+    <ellipse cx="0" cy="200" rx="85" ry="130" fill="url(#nebulaPetal3)" transform="rotate(180 0 200)"/>
+    <ellipse cx="15" cy="220" rx="40" ry="55" fill="url(#cosmicGlow)" transform="rotate(180 15 220)"/>
+    <ellipse cx="0" cy="200" rx="75" ry="115" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(180 0 200)"/>
+    <ellipse cx="-10" cy="190" rx="20" ry="35" fill="url(#energyWisp)" transform="rotate(170 -10 190)"/>
+    
+    <!-- Petal 6 - Bottom Left -->
+    <ellipse cx="-141" cy="141" rx="85" ry="130" fill="url(#nebulaPetal2)" transform="rotate(225 -141 141)"/>
+    <ellipse cx="-130" cy="156" rx="40" ry="55" fill="url(#cosmicGlow)" transform="rotate(225 -130 156)"/>
+    <ellipse cx="-141" cy="141" rx="75" ry="115" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(225 -141 141)"/>
+    <ellipse cx="-148" cy="135" rx="20" ry="35" fill="url(#energyWisp)" transform="rotate(215 -148 135)"/>
+    
+    <!-- Petal 7 - Left -->
+    <ellipse cx="-200" cy="0" rx="85" ry="130" fill="url(#nebulaPetal3)" transform="rotate(270 -200 0)"/>
+    <ellipse cx="-220" cy="15" rx="40" ry="55" fill="url(#cosmicGlow)" transform="rotate(270 -220 15)"/>
+    <ellipse cx="-200" cy="0" rx="75" ry="115" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(270 -200 0)"/>
+    <ellipse cx="-190" cy="-10" rx="20" ry="35" fill="url(#energyWisp)" transform="rotate(260 -190 -10)"/>
+    
+    <!-- Petal 8 - Top Left -->
+    <ellipse cx="-141" cy="-141" rx="85" ry="130" fill="url(#nebulaPetal2)" transform="rotate(315 -141 -141)"/>
+    <ellipse cx="-156" cy="-130" rx="40" ry="55" fill="url(#cosmicGlow)" transform="rotate(315 -156 -130)"/>
+    <ellipse cx="-141" cy="-141" rx="75" ry="115" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(315 -141 -141)"/>
+    <ellipse cx="-135" cy="-148" rx="20" ry="35" fill="url(#energyWisp)" transform="rotate(305 -135 -148)"/>
+  </g>
+  
+  <!-- Middle layer - 8 petals (cyan nebula) offset by 22.5 degrees -->
+  <g transform="translate(400, 400)">
+    <ellipse cx="0" cy="-150" rx="80" ry="120" fill="url(#nebulaPetal2)" transform="rotate(22.5 0 -150)"/>
+    <ellipse cx="-12" cy="-165" rx="35" ry="48" fill="url(#cosmicGlow)" transform="rotate(22.5 -12 -165)"/>
+    <ellipse cx="0" cy="-150" rx="70" ry="105" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(22.5 0 -150)"/>
+    
+    <ellipse cx="150" cy="0" rx="80" ry="120" fill="url(#nebulaPetal1)" transform="rotate(67.5 150 0)"/>
+    <ellipse cx="165" cy="-12" rx="35" ry="48" fill="url(#cosmicGlow)" transform="rotate(67.5 165 -12)"/>
+    <ellipse cx="150" cy="0" rx="70" ry="105" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(67.5 150 0)"/>
+    
+    <ellipse cx="0" cy="150" rx="80" ry="120" fill="url(#nebulaPetal2)" transform="rotate(112.5 0 150)"/>
+    <ellipse cx="12" cy="165" rx="35" ry="48" fill="url(#cosmicGlow)" transform="rotate(112.5 12 165)"/>
+    <ellipse cx="0" cy="150" rx="70" ry="105" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(112.5 0 150)"/>
+    
+    <ellipse cx="-150" cy="0" rx="80" ry="120" fill="url(#nebulaPetal1)" transform="rotate(157.5 -150 0)"/>
+    <ellipse cx="-165" cy="12" rx="35" ry="48" fill="url(#cosmicGlow)" transform="rotate(157.5 -165 12)"/>
+    <ellipse cx="-150" cy="0" rx="70" ry="105" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(157.5 -150 0)"/>
+    
+    <ellipse cx="0" cy="-150" rx="80" ry="120" fill="url(#nebulaPetal2)" transform="rotate(202.5 0 -150)"/>
+    <ellipse cx="-12" cy="-165" rx="35" ry="48" fill="url(#cosmicGlow)" transform="rotate(202.5 -12 -165)"/>
+    <ellipse cx="0" cy="-150" rx="70" ry="105" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(202.5 0 -150)"/>
+    
+    <ellipse cx="150" cy="0" rx="80" ry="120" fill="url(#nebulaPetal1)" transform="rotate(247.5 150 0)"/>
+    <ellipse cx="165" cy="-12" rx="35" ry="48" fill="url(#cosmicGlow)" transform="rotate(247.5 165 -12)"/>
+    <ellipse cx="150" cy="0" rx="70" ry="105" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(247.5 150 0)"/>
+    
+    <ellipse cx="0" cy="150" rx="80" ry="120" fill="url(#nebulaPetal2)" transform="rotate(292.5 0 150)"/>
+    <ellipse cx="12" cy="165" rx="35" ry="48" fill="url(#cosmicGlow)" transform="rotate(292.5 12 165)"/>
+    <ellipse cx="0" cy="150" rx="70" ry="105" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(292.5 0 150)"/>
+    
+    <ellipse cx="-150" cy="0" rx="80" ry="120" fill="url(#nebulaPetal1)" transform="rotate(337.5 -150 0)"/>
+    <ellipse cx="-165" cy="12" rx="35" ry="48" fill="url(#cosmicGlow)" transform="rotate(337.5 -165 12)"/>
+    <ellipse cx="-150" cy="0" rx="70" ry="105" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(337.5 -150 0)"/>
+  </g>
+  
+  <!-- Inner layer - 8 petals (bright nebula green) -->
+  <g transform="translate(400, 400)">
+    <ellipse cx="0" cy="-100" rx="75" ry="110" fill="url(#nebulaPetal1)" transform="rotate(0 0 -100)"/>
+    <ellipse cx="-10" cy="-115" rx="32" ry="45" fill="url(#cosmicGlow)" transform="rotate(0 -10 -115)"/>
+    <ellipse cx="0" cy="-100" rx="65" ry="95" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(0 0 -100)"/>
+    
+    <ellipse cx="70" cy="-70" rx="75" ry="110" fill="url(#nebulaPetal1)" transform="rotate(45 70 -70)"/>
+    <ellipse cx="60" cy="-82" rx="32" ry="45" fill="url(#cosmicGlow)" transform="rotate(45 60 -82)"/>
+    <ellipse cx="70" cy="-70" rx="65" ry="95" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(45 70 -70)"/>
+    
+    <ellipse cx="100" cy="0" rx="75" ry="110" fill="url(#nebulaPetal1)" transform="rotate(90 100 0)"/>
+    <ellipse cx="115" cy="-10" rx="32" ry="45" fill="url(#cosmicGlow)" transform="rotate(90 115 -10)"/>
+    <ellipse cx="100" cy="0" rx="65" ry="95" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(90 100 0)"/>
+    
+    <ellipse cx="70" cy="70" rx="75" ry="110" fill="url(#nebulaPetal1)" transform="rotate(135 70 70)"/>
+    <ellipse cx="82" cy="60" rx="32" ry="45" fill="url(#cosmicGlow)" transform="rotate(135 82 60)"/>
+    <ellipse cx="70" cy="70" rx="65" ry="95" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(135 70 70)"/>
+    
+    <ellipse cx="0" cy="100" rx="75" ry="110" fill="url(#nebulaPetal1)" transform="rotate(180 0 100)"/>
+    <ellipse cx="10" cy="115" rx="32" ry="45" fill="url(#cosmicGlow)" transform="rotate(180 10 115)"/>
+    <ellipse cx="0" cy="100" rx="65" ry="95" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(180 0 100)"/>
+    
+    <ellipse cx="-70" cy="70" rx="75" ry="110" fill="url(#nebulaPetal1)" transform="rotate(225 -70 70)"/>
+    <ellipse cx="-60" cy="82" rx="32" ry="45" fill="url(#cosmicGlow)" transform="rotate(225 -60 82)"/>
+    <ellipse cx="-70" cy="70" rx="65" ry="95" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(225 -70 70)"/>
+    
+    <ellipse cx="-100" cy="0" rx="75" ry="110" fill="url(#nebulaPetal1)" transform="rotate(270 -100 0)"/>
+    <ellipse cx="-115" cy="10" rx="32" ry="45" fill="url(#cosmicGlow)" transform="rotate(270 -115 10)"/>
+    <ellipse cx="-100" cy="0" rx="65" ry="95" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(270 -100 0)"/>
+    
+    <ellipse cx="-70" cy="-70" rx="75" ry="110" fill="url(#nebulaPetal1)" transform="rotate(315 -70 -70)"/>
+    <ellipse cx="-82" cy="-60" rx="32" ry="45" fill="url(#cosmicGlow)" transform="rotate(315 -82 -60)"/>
+    <ellipse cx="-70" cy="-70" rx="65" ry="95" fill="url(#cosmicRim)" opacity="0.5" transform="rotate(315 -70 -70)"/>
+  </g>
+  
+  <!-- Center nebula core -->
+  <circle cx="400" cy="400" r="85" fill="url(#nebulaCore)"/>
+  <circle cx="385" cy="385" r="40" fill="url(#cosmicGlow)"/>
+  <circle cx="400" cy="400" r="70" fill="url(#cosmicRim)" opacity="0.4"/>
+  
+  <!-- Central bright star -->
+  <circle cx="400" cy="400" r="15" fill="#ffffff" opacity="0.95"/>
+  <circle cx="400" cy="400" r="25" fill="#ffffff" opacity="0.4"/>
+  
+  <!-- Additional stardust closer to center -->
+  <circle cx="350" cy="350" r="2" fill="#ffffff" opacity="0.9"/>
+  <circle cx="450" cy="360" r="1.5" fill="#a7f3d0" opacity="0.85"/>
+  <circle cx="370" cy="440" r="2" fill="#67e8f9" opacity="0.9"/>
+  <circle cx="440" cy="450" r="1.5" fill="#ffffff" opacity="0.85"/>
+</svg>

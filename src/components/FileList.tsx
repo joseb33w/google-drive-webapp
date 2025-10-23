@@ -450,10 +450,14 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
-                    <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-                    </svg>
+                  <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+                    <Image 
+                      src="/authoritative-lotus-logo.svg" 
+                      alt="File" 
+                      width={24} 
+                      height={24}
+                      className="w-6 h-6"
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">

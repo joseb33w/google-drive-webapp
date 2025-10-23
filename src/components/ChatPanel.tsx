@@ -200,10 +200,10 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
       <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-medium text-gray-900">AI Assistant</h3>
+            <h3 className="text-sm font-medium text-gray-900">Triamit</h3>
             {selectedFile && (
-              <p className="text-xs text-gray-500 truncate">
-                Context: {selectedFile.name}
+              <p className="text-sm font-bold text-gray-900 truncate">
+                {selectedFile.name}
               </p>
             )}
           </div>
@@ -212,19 +212,8 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
               onClick={clearChat}
               className="text-xs text-gray-500 hover:text-gray-700"
             >
-              Clear
+              Clear Chat
             </button>
-            {user && (
-              <button
-                onClick={handleSignOut}
-                className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 hover:text-gray-800 rounded-lg transition-all duration-200 flex items-center space-x-1"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                <span>Sign out</span>
-              </button>
-            )}
           </div>
         </div>
       </div>
@@ -238,7 +227,7 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
-            <p className="text-sm">Start a conversation with the AI assistant</p>
+            <p className="text-sm">Start a conversation with Triamit</p>
             <p className="text-xs text-gray-400 mt-1">
               Ask questions about your document or request edits
             </p>
@@ -372,7 +361,7 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask the AI to help with your document..."
+            placeholder="Search, Build anything"
             className="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
             rows={2}
             disabled={isLoading}
@@ -389,18 +378,31 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
           Press Enter to send, Shift+Enter for new line
         </p>
         
-        {/* Model Selection */}
-        <div className="mt-3 flex items-center gap-2">
-          <label className="text-xs text-gray-600 font-medium">Model:</label>
-          <select
-            value={selectedModel}
-            onChange={(e) => onModelChange(e.target.value)}
-            className="text-xs border border-gray-300 rounded px-2 py-1 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="gpt-5-chat-latest">GPT-5 Chat Latest</option>
-            <option value="claude-4.5-sonnet">Claude 4.5 Sonnet</option>
-            <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-          </select>
+        {/* Model Selection and Sign Out */}
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-600 font-medium">Model:</label>
+            <select
+              value={selectedModel}
+              onChange={(e) => onModelChange(e.target.value)}
+              className="text-xs border border-gray-300 rounded px-2 py-1 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="gpt-5-chat-latest">GPT-5 Chat Latest</option>
+              <option value="claude-4.5-sonnet">Claude 4.5 Sonnet</option>
+              <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+            </select>
+          </div>
+          {user && (
+            <button
+              onClick={handleSignOut}
+              className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200 flex items-center space-x-1 shadow-sm"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span>Sign out</span>
+            </button>
+          )}
         </div>
       </div>
       
