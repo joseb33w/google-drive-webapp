@@ -474,7 +474,8 @@ For non-edit requests, respond with plain text.`;
     console.log('User message:', message);
     
     const response = await callAIModel(selectedModel, messages, systemPrompt);
-    console.log('AI Response:', response.substring(0, 500) + '...');
+    console.log('AI Response length:', response.length, 'characters');
+    console.log('AI Response preview:', response.substring(0, 200) + '...');
 
     // Try to parse JSON response for edit proposals
     let parsedResponse;
@@ -492,11 +493,11 @@ For non-edit requests, respond with plain text.`;
         cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
       }
       
-      // Try to fix common JSON issues before parsing
+      // Apply JSON fixes BEFORE trying to parse
       cleanResponse = fixCommonJsonIssues(cleanResponse);
       
       parsedResponse = JSON.parse(cleanResponse);
-      console.log('Parsed JSON:', JSON.stringify(parsedResponse, null, 2));
+      console.log('Parsed JSON successfully');
       
       // If it's a valid JSON with edit structure, return it
       if (parsedResponse.response && parsedResponse.edit) {
@@ -505,9 +506,10 @@ For non-edit requests, respond with plain text.`;
         return;
       }
     } catch (e) {
-      console.log('Not valid JSON, treating as plain text. Error:', e instanceof Error ? e.message : String(e));
+      console.log('JSON parsing failed:', e instanceof Error ? e.message : String(e));
+      console.log('Attempting aggressive fix...');
       
-      // Try one more aggressive fix for common Claude issues
+      // Try aggressive fix with better newContent handling
       try {
         let aggressiveFix = response.trim();
         
@@ -521,11 +523,11 @@ For non-edit requests, respond with plain text.`;
         if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
           aggressiveFix = aggressiveFix.substring(firstBrace, lastBrace + 1);
           
-          // Apply fixes
+          // Apply aggressive JSON fixes
           aggressiveFix = fixCommonJsonIssues(aggressiveFix);
           
           parsedResponse = JSON.parse(aggressiveFix);
-          console.log('Aggressive fix succeeded, parsed JSON:', JSON.stringify(parsedResponse, null, 2));
+          console.log('Aggressive fix succeeded');
           
           if (parsedResponse.response && parsedResponse.edit) {
             console.log('Returning edit proposal from aggressive fix');
@@ -534,7 +536,7 @@ For non-edit requests, respond with plain text.`;
           }
         }
       } catch (aggressiveError) {
-        console.log('Aggressive fix also failed:', aggressiveError instanceof Error ? aggressiveError.message : String(aggressiveError));
+        console.log('Aggressive fix failed:', aggressiveError instanceof Error ? aggressiveError.message : String(aggressiveError));
       }
       
       // Not JSON, continue with normal text response
