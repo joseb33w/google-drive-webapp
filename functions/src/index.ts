@@ -539,6 +539,8 @@ IMPORTANT: Before creating any formulas, check the "Available Sheets" in the spr
 - If context shows "Available Sheets: Sheet1" → Use 'Sheet1' in formulas
 - NEVER use sheet names that are not listed in the available sheets
 
+// Updated: Enhanced formula validation for google-drive-webapp-9xjr deployment
+
 For updating cells with COUNTIF and other functions referencing other sheets:
 {
   "response": "Adding COUNTIF formulas to count items from other sheets",
