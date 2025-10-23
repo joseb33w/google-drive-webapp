@@ -45,7 +45,8 @@ function fixCommonJsonIssues(jsonString: string): string {
     let fixed = jsonString.trim();
     
     // Fix 1: Handle unescaped newlines in strings (most common issue with Claude and GPT)
-    // Properly track when we're inside a JSON string value by looking at context
+    // Count newlines to verify we're escaping them
+    let newlineCount = 0;
     let result = '';
     let inString = false;
     
@@ -64,6 +65,7 @@ function fixCommonJsonIssues(jsonString: string): string {
         // Inside a string value, escape special characters
         if (char === '\n') {
           result += '\\n';
+          newlineCount++;
         } else if (char === '\r') {
           result += '\\r';
         } else if (char === '\t') {
@@ -79,6 +81,7 @@ function fixCommonJsonIssues(jsonString: string): string {
       }
     }
     
+    console.log('Escaped', newlineCount, 'newlines in JSON strings');
     fixed = result;
     
     // Fix 2: Try to find and close unclosed objects/arrays
