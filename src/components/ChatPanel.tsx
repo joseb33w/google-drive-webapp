@@ -200,7 +200,7 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
       <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-medium text-gray-900">Triamit</h3>
+            <h3 className="text-lg font-semibold text-gray-800">Triamit</h3>
             {selectedFile && (
               <p className="text-sm font-bold text-gray-900 truncate">
                 {selectedFile.name}
@@ -208,12 +208,17 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
             )}
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={clearChat}
-              className="text-xs text-gray-500 hover:text-gray-700"
-            >
-              Clear Chat
-            </button>
+            {user && (
+              <button
+                onClick={handleSignOut}
+                className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200 flex items-center space-x-1 shadow-sm"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span>Sign out</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -378,7 +383,7 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
           Press Enter to send, Shift+Enter for new line
         </p>
         
-        {/* Model Selection and Sign Out */}
+        {/* Model Selection and Clear Chat */}
         <div className="mt-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <label className="text-xs text-gray-600 font-medium">Model:</label>
@@ -392,17 +397,15 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
               <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
             </select>
           </div>
-          {user && (
-            <button
-              onClick={handleSignOut}
-              className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200 flex items-center space-x-1 shadow-sm"
-            >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              <span>Sign out</span>
-            </button>
-          )}
+          <button
+            onClick={clearChat}
+            className="px-3 py-1.5 text-xs font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg transition-all duration-200 flex items-center space-x-1 shadow-sm"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            <span>Clear Chat</span>
+          </button>
         </div>
       </div>
       

@@ -517,7 +517,7 @@ export default function Home() {
         style={{ width: `${rightWidth}%` }}
       >
         <div className="p-4 border-b border-gray-200 flex-shrink-0 bg-white">
-          <h2 className="text-lg font-semibold text-gray-800">AI Assistant</h2>
+          <h2 className="text-lg font-semibold text-gray-800">Triamit</h2>
         </div>
         <div className="flex-1 overflow-y-auto min-h-0 bg-white">
           <ChatPanel 
