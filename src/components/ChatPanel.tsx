@@ -183,7 +183,7 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
 
 
   return (
-    <div className="flex flex-col h-full bg-white min-h-0">
+    <div className="flex flex-col h-full overflow-x-hidden bg-white min-h-0">
       {/* Chat header */}
       <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
         <div className="flex items-center justify-between">
@@ -237,10 +237,10 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                className={`max-w-[95%] px-4 py-2 rounded-lg break-words ${
                   message.role === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-900'
+                    ? 'bg-blue-600 text-white ml-auto'
+                    : 'bg-gray-100 text-gray-900 mr-auto'
                 }`}
               >
                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>

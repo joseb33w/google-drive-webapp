@@ -450,7 +450,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
       </div>
 
       {/* File list */}
-      <div className="flex-1 overflow-y-auto bg-white min-h-0">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white min-h-0">
         {files.length === 0 ? (
           <div className="p-4 text-center text-gray-500">
             {loading ? 'Loading files...' : 'No Google Docs found'}
