@@ -215,11 +215,6 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
                 }`}
               >
                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                <p className={`text-xs mt-1 ${
-                  message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
-                }`}>
-                  {message.timestamp.toLocaleTimeString()}
-                </p>
                 
                    {/* Accept/Reject buttons for edit proposals */}
                    {message.editProposal && message.editProposal.status === 'pending' && (
