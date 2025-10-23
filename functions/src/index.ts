@@ -1142,7 +1142,7 @@ export const googleDriveOperations = onRequest({
         await sheets.spreadsheets.values.update({
           spreadsheetId: params.documentId,
           range: range || 'A1',
-          valueInputOption: 'RAW',
+          valueInputOption: 'USER_ENTERED',
           requestBody: {
             values: values
           }
@@ -1180,7 +1180,7 @@ export const googleDriveOperations = onRequest({
         await sheets.spreadsheets.values.update({
           spreadsheetId: params.documentId,
           range: cell,
-          valueInputOption: 'RAW',
+          valueInputOption: 'USER_ENTERED',
           requestBody: {
             values: [[value]]
           }
@@ -1200,7 +1200,7 @@ export const googleDriveOperations = onRequest({
         await sheets.spreadsheets.values.update({
           spreadsheetId: params.documentId,
           range: range,
-          valueInputOption: 'RAW',
+          valueInputOption: 'USER_ENTERED',
           requestBody: {
             values: values
           }
@@ -1240,7 +1240,7 @@ export const googleDriveOperations = onRequest({
           await sheets.spreadsheets.values.update({
             spreadsheetId: params.documentId,
             range: rowRange,
-            valueInputOption: 'RAW',
+            valueInputOption: 'USER_ENTERED',
             requestBody: {
               values: [values]
             }
@@ -1282,7 +1282,7 @@ export const googleDriveOperations = onRequest({
           await sheets.spreadsheets.values.update({
             spreadsheetId: params.documentId,
             range: columnRange,
-            valueInputOption: 'RAW',
+            valueInputOption: 'USER_ENTERED',
             requestBody: {
               values: values.map((value: any) => [value])
             }
