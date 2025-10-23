@@ -1033,6 +1033,15 @@ async function getOAuthClient(uid: string) {
   
   const tokens = userDoc.data();
   
+  // Validate that we have the required tokens
+  if (!tokens?.access_token) {
+    throw new Error('Access token not found. Please sign in with Google again.');
+  }
+  
+  if (!tokens?.refresh_token) {
+    throw new Error('Refresh token not found. Please sign in with Google again to get a new refresh token.');
+  }
+  
   // Create OAuth2 client
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
@@ -1041,19 +1050,24 @@ async function getOAuthClient(uid: string) {
   );
   
   oauth2Client.setCredentials({
-    access_token: tokens?.access_token,
-    refresh_token: tokens?.refresh_token,
-    expiry_date: tokens?.expiry_date
+    access_token: tokens.access_token,
+    refresh_token: tokens.refresh_token,
+    expiry_date: tokens.expiry_date
   });
   
   // Set up automatic token refresh
   oauth2Client.on('tokens', async (newTokens) => {
     console.log('Refreshing tokens for user:', uid);
-    await db.collection('userTokens').doc(uid).update({
-      access_token: newTokens.access_token,
-      expiry_date: newTokens.expiry_date,
-      updated_at: admin.firestore.FieldValue.serverTimestamp()
-    });
+    try {
+      await db.collection('userTokens').doc(uid).update({
+        access_token: newTokens.access_token,
+        expiry_date: newTokens.expiry_date,
+        updated_at: admin.firestore.FieldValue.serverTimestamp()
+      });
+      console.log('Tokens refreshed successfully for user:', uid);
+    } catch (error) {
+      console.error('Failed to update refreshed tokens:', error);
+    }
   });
   
   return oauth2Client;
@@ -1612,6 +1626,18 @@ export const googleDriveOperations = onRequest({
         error: 'OAuth tokens not found',
         needsAuth: true,
         message: 'Please sign in with Google again to authorize Drive access'
+      });
+    } else if (error.message?.includes('No refresh token is set')) {
+      res.status(401).json({ 
+        error: 'Refresh token missing',
+        needsAuth: true,
+        message: 'Please sign in with Google again to get a new refresh token'
+      });
+    } else if (error.message?.includes('Refresh token not found')) {
+      res.status(401).json({ 
+        error: 'Refresh token not found',
+        needsAuth: true,
+        message: 'Please sign in with Google again to get a new refresh token'
       });
     } else {
       res.status(500).json({ 
