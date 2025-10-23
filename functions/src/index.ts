@@ -44,34 +44,23 @@ function fixCommonJsonIssues(jsonString: string): string {
     
     let fixed = jsonString.trim();
     
-    // Fix 1: Handle unescaped newlines in strings (most common issue with Claude)
-    // This is a more aggressive approach that handles the newContent field properly
+    // Fix 1: Handle unescaped newlines in strings (most common issue with Claude and GPT)
+    // Properly track when we're inside a JSON string value by looking at context
     let result = '';
-    let inStringValue = false;
-    let escapeNextChar = false;
+    let inString = false;
     
     for (let i = 0; i < fixed.length; i++) {
       const char = fixed[i];
+      const prevChar = i > 0 ? fixed[i - 1] : '';
       
-      if (escapeNextChar) {
-        result += char;
-        escapeNextChar = false;
-        continue;
-      }
+      // Check if this quote is escaped
+      const isEscaped = prevChar === '\\' && (i < 2 || fixed[i - 2] !== '\\');
       
-      if (char === '\\') {
+      // Toggle string state on unescaped quotes
+      if (char === '"' && !isEscaped) {
+        inString = !inString;
         result += char;
-        escapeNextChar = true;
-        continue;
-      }
-      
-      if (char === '"' && !inStringValue) {
-        inStringValue = true;
-        result += char;
-      } else if (char === '"' && inStringValue) {
-        inStringValue = false;
-        result += char;
-      } else if (inStringValue) {
+      } else if (inString) {
         // Inside a string value, escape special characters
         if (char === '\n') {
           result += '\\n';
@@ -79,9 +68,8 @@ function fixCommonJsonIssues(jsonString: string): string {
           result += '\\r';
         } else if (char === '\t') {
           result += '\\t';
-        } else if (char === '"') {
-          result += '\\"';
-        } else if (char === '\\') {
+        } else if (char === '\\' && i + 1 < fixed.length && fixed[i + 1] !== '\\' && fixed[i + 1] !== 'n' && fixed[i + 1] !== 'r' && fixed[i + 1] !== 't' && fixed[i + 1] !== '"') {
+          // Only escape backslashes that aren't already part of escape sequences
           result += '\\\\';
         } else {
           result += char;
