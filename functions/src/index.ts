@@ -521,11 +521,30 @@ For updating a range of cells:
   }
 }
 
+For updating cells with cross-sheet formulas:
+{
+  "response": "Adding formulas that reference other sheets for dynamic data",
+  "edit": {
+    "type": "update_range",
+    "range": "A1:D3",
+    "values": [["Product", "Units Sold", "Price", "Revenue"], ["Laptop Pro", "='Sheet1'!B5", "1499.99", "=B2*C2"], ["Mouse", "='Sheet1'!C5", "49.99", "=B3*C3"]],
+    "confidence": "high",
+    "reasoning": "Using proper sheet reference syntax with single quotes"
+  }
+}
+
 IMPORTANT: When using "update_range", ensure the range exactly matches the number of rows in your values array:
 - If you have 3 rows of data, use range like "A1:C3" (3 rows)
 - If you have 10 rows of data, use range like "A1:E10" (10 rows)
 - The range must include ALL rows you're writing to, including headers
 - Count your values array length and match it exactly to the range row count
+
+CROSS-SHEET FORMULAS: When referencing other sheets in formulas, use the correct syntax:
+- To reference a cell from another sheet: ='SheetName'!A1 (use single quotes around sheet name)
+- To reference a range from another sheet: ='SheetName'!A1:B10
+- For functions with sheet references: =SUM('Sheet1'!A1:A10) or =COUNTIF('INVENTORY'!F:F, "Reorder")
+- Always use single quotes around sheet names that contain spaces or special characters
+- Example: ='Sheet 1'!B5 (not =Sheet1!B5 if the sheet name has spaces)
 
 For inserting a row:
 {
