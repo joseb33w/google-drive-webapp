@@ -17,7 +17,8 @@ function columnIndexToLetter(index: number): string {
 
 export default function SpreadsheetGrid({ data }: SpreadsheetGridProps) {
   const { rows, gridProperties } = data;
-  const columnCount = gridProperties.columnCount || rows[0]?.length || 26;
+  const columnCount = gridProperties.columnCount || Math.max(rows[0]?.length || 0, 26);
+  const rowCount = Math.max(gridProperties.rowCount || rows.length, 50); // Show at least 50 rows
   
   return (
     <div className="overflow-auto bg-white">
@@ -38,23 +39,26 @@ export default function SpreadsheetGrid({ data }: SpreadsheetGridProps) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, rowIndex) => (
-            <tr key={rowIndex}>
-              {/* Row number */}
-              <td className="sticky left-0 z-10 bg-gray-100 border border-gray-300 px-2 py-1 text-xs font-semibold text-gray-700 text-center">
-                {rowIndex + 1}
-              </td>
-              {/* Cell data */}
-              {Array.from({ length: columnCount }).map((_, colIndex) => (
-                <td
-                  key={colIndex}
-                  className="border border-gray-300 px-2 py-1 text-sm text-gray-900 min-h-[24px]"
-                >
-                  {row[colIndex] || ''}
+          {Array.from({ length: rowCount }, (_, rowIndex) => {
+            const rowData = rows[rowIndex] || [];
+            return (
+              <tr key={rowIndex}>
+                {/* Row number */}
+                <td className="sticky left-0 z-10 bg-gray-100 border border-gray-300 px-2 py-1 text-xs font-semibold text-gray-700 text-center">
+                  {rowIndex + 1}
                 </td>
-              ))}
-            </tr>
-          ))}
+                {/* Cell data */}
+                {Array.from({ length: columnCount }).map((_, colIndex) => (
+                  <td
+                    key={colIndex}
+                    className="border border-gray-300 px-2 py-1 text-sm text-gray-900 min-h-[24px]"
+                  >
+                    {rowData[colIndex] || ''}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
