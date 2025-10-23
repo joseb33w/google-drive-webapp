@@ -20,10 +20,32 @@ export interface DocumentContentItem {
   rowIndex?: number; // For spreadsheet rows
 }
 
+export interface SheetMetadata {
+  sheetId: number;
+  title: string;
+  index: number;
+  gridProperties: {
+    rowCount: number;
+    columnCount: number;
+  };
+}
+
+export interface SheetData {
+  sheetId: number;
+  title: string;
+  rows: string[][]; // 2D array of cell values
+  gridProperties: {
+    rowCount: number;
+    columnCount: number;
+  };
+}
+
 export interface DocumentContent {
   documentId: string;
   title: string;
-  content: DocumentContentItem[];
+  content?: DocumentContentItem[]; // For Google Docs
+  sheets?: SheetMetadata[]; // For Google Sheets
+  activeSheet?: SheetData; // Currently displayed sheet
   error?: string;
 }
 

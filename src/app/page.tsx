@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import FileList from '@/components/FileList';
 import ChatPanel from '@/components/ChatPanel';
+import SheetTabs from '@/components/SheetTabs';
+import SpreadsheetGrid from '@/components/SpreadsheetGrid';
 import { File, Message, DocumentContent, DocumentContentItem, AuthUser } from '@/types';
 import { FIREBASE_FUNCTIONS } from '@/lib/config';
 import { ErrorToast, useErrorToast } from '@/components/ErrorToast';
@@ -16,6 +18,7 @@ export default function Home() {
   const [documentContent, setDocumentContent] = useState<DocumentContent | null>(null);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [activeSheetId, setActiveSheetId] = useState<number | null>(null);
   const [pendingEdit, setPendingEdit] = useState<{
     messageId: string;
     type: string;
@@ -183,7 +186,68 @@ export default function Home() {
   // Handle file selection
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
+    setActiveSheetId(null); // Reset active sheet when switching files
     loadDocumentContent(file);
+  };
+
+  // Handle sheet change for spreadsheets
+  const handleSheetChange = async (sheetId: number) => {
+    if (!selectedFile) return;
+    
+    setLoading(true);
+    try {
+      // Get Firebase auth token
+      const { getAuth } = await import('firebase/auth');
+      const auth = getAuth();
+      const user = auth.currentUser;
+      
+      if (!user) {
+        addToast('Please sign in to view documents', 'error');
+        setLoading(false);
+        return;
+      }
+
+      const idToken = await user.getIdToken();
+      
+      // Fetch the specific sheet data
+      const response = await fetch(FIREBASE_FUNCTIONS.googleDriveOperations, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          operation: 'get_sheet',
+          params: {
+            documentId: selectedFile.id,
+            sheetId: sheetId
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to load sheet');
+      }
+
+      const data = await response.json();
+      
+      if (data.result) {
+        // Update document content with new active sheet
+        setDocumentContent(prev => ({
+          ...prev!,
+          activeSheet: data.result.activeSheet
+        }));
+        setActiveSheetId(sheetId);
+      } else if (data.error) {
+        addToast(data.error, 'error');
+      }
+    } catch (error) {
+      console.error('Error loading sheet:', error);
+      addToast(error instanceof Error ? error.message : 'Failed to load sheet content', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle accepting an edit
@@ -387,20 +451,6 @@ export default function Home() {
         return null;
       }
 
-      // Handle spreadsheet rows differently
-      if (item.type === 'row') {
-        const cells = item.text.split('\t');
-        return (
-          <div key={index} className="flex border-b border-gray-200 py-2">
-            {cells.map((cell, cellIndex) => (
-              <div key={cellIndex} className="flex-1 px-2 text-sm text-gray-900 border-r border-gray-100 last:border-r-0">
-                {cell || '\u00A0'} {/* Non-breaking space for empty cells */}
-              </div>
-            ))}
-          </div>
-        );
-      }
-
       // If there's a pending edit, use smart text matching
       if (pendingEdit) {
         const match = findTextWithFuzzyMatching(content, pendingEdit.findText);
@@ -496,10 +546,23 @@ export default function Home() {
                         </p>
                       )}
                     </div>
+                  ) : documentContent.sheets && documentContent.activeSheet ? (
+                    // Render spreadsheet with tabs and grid
+                    <div className="flex flex-col h-full">
+                      <div className="flex-1 overflow-auto">
+                        <SpreadsheetGrid data={documentContent.activeSheet} />
+                      </div>
+                      <SheetTabs
+                        sheets={documentContent.sheets}
+                        activeSheetId={activeSheetId || documentContent.activeSheet.sheetId}
+                        onSheetChange={handleSheetChange}
+                      />
+                    </div>
                   ) : (
+                    // Render regular document content
                     <div className="prose prose-lg max-w-none">
                       <h1 className="text-3xl font-bold text-gray-900 mb-8">{documentContent.title}</h1>
-                      {renderDocumentContent(documentContent.content)}
+                      {renderDocumentContent(documentContent.content || [])}
                     </div>
                   )}
                 </div>

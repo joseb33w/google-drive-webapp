@@ -924,41 +924,62 @@ export const googleDriveOperations = onRequest({
         // Get spreadsheet content - Google Sheets integration is now live!
         const response = await sheets.spreadsheets.get({
           spreadsheetId: params.documentId,
-          includeGridData: true
+          includeGridData: true,
+          ranges: params.sheetId ? [`${params.sheetId}`] : undefined
         });
 
-        // Extract data from the first sheet
-        const sheet = response.data.sheets?.[0];
-        const gridData = sheet?.data?.[0];
+        // Extract all sheet metadata
+        const sheetMetadata = response.data.sheets?.map(sheet => ({
+          sheetId: sheet.properties?.sheetId,
+          title: sheet.properties?.title,
+          index: sheet.properties?.index,
+          gridProperties: {
+            rowCount: sheet.properties?.gridProperties?.rowCount,
+            columnCount: sheet.properties?.gridProperties?.columnCount
+          }
+        }));
+
+        // Extract data from requested sheet (first sheet if not specified)
+        const targetSheet = params.sheetId 
+          ? response.data.sheets?.find(s => s.properties?.sheetId === params.sheetId)
+          : response.data.sheets?.[0];
+        
+        const gridData = targetSheet?.data?.[0];
         
         if (!gridData) {
           result = {
             documentId: params.documentId,
             title: response.data.properties?.title || 'Untitled Spreadsheet',
-            content: [],
+            sheets: sheetMetadata,
+            activeSheet: {
+              sheetId: targetSheet?.properties?.sheetId,
+              title: targetSheet?.properties?.title,
+              rows: [],
+              gridProperties: targetSheet?.properties?.gridProperties
+            },
             error: 'No data found in spreadsheet'
           };
           break;
         }
 
-        // Convert grid data to text format
-        const rows = gridData.rowData || [];
-        const content = rows.map((row, rowIndex) => {
+        // Convert grid data to 2D array
+        const rows = gridData.rowData?.map(row => {
           const cells = row.values || [];
-          const cellTexts = cells.map((cell, cellIndex) => {
-            return cell.formattedValue || cell.userEnteredValue?.stringValue || '';
-          });
-          return {
-            type: 'row',
-            text: cellTexts.join('\t'), // Tab-separated values
-            rowIndex: rowIndex + 1
-          };
-        });
+          return cells.map(cell => 
+            cell.formattedValue || cell.userEnteredValue?.stringValue || ''
+          );
+        }) || [];
 
         result = {
           documentId: params.documentId,
           title: response.data.properties?.title || 'Untitled Spreadsheet',
-          content: content
+          sheets: sheetMetadata,
+          activeSheet: {
+            sheetId: targetSheet?.properties?.sheetId,
+            title: targetSheet?.properties?.title,
+            rows: rows,
+            gridProperties: targetSheet?.properties?.gridProperties
+          }
         };
         break;
       }
