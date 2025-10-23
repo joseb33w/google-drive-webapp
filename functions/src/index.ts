@@ -1046,7 +1046,7 @@ async function getOAuthClient(uid: string) {
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    'https://google-drive-webapp-9xjr.vercel.app'
+    'https://google-drive-webapp-9xjr-cfywzqbha-knight-s-projects-9ddc5f2b.vercel.app'
   );
   
   oauth2Client.setCredentials({
@@ -1755,7 +1755,7 @@ export const exchangeOAuthCode = onRequest({
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      redirectUri || 'https://google-drive-webapp-9xjr.vercel.app'
+      redirectUri || 'https://google-drive-webapp-9xjr-cfywzqbha-knight-s-projects-9ddc5f2b.vercel.app'
     );
 
     const { tokens } = await oauth2Client.getToken(code);
