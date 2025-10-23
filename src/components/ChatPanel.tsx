@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { File, Message, DocumentContent, DocumentContentItem, AuthUser } from '@/types';
+import { File, Message, DocumentContent, DocumentContentItem } from '@/types';
 import { ErrorToast, useErrorToast } from './ErrorToast';
 
 interface EditProposal {
