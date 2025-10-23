@@ -525,6 +525,7 @@ IMPORTANT: When using "update_range", ensure the range exactly matches the numbe
 - If you have 3 rows of data, use range like "A1:C3" (3 rows)
 - If you have 10 rows of data, use range like "A1:E10" (10 rows)
 - The range must include ALL rows you're writing to, including headers
+- Count your values array length and match it exactly to the range row count
 
 For inserting a row:
 {
