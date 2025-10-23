@@ -494,7 +494,10 @@ For non-edit requests, respond with plain text.`;
       }
       
       // Apply JSON fixes BEFORE trying to parse
+      console.log('Clean response length before fix:', cleanResponse.length);
+      console.log('Clean response preview:', cleanResponse.substring(0, 300));
       cleanResponse = fixCommonJsonIssues(cleanResponse);
+      console.log('Clean response length after fix:', cleanResponse.length);
       
       parsedResponse = JSON.parse(cleanResponse);
       console.log('Parsed JSON successfully');
