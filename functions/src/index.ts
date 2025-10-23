@@ -539,6 +539,20 @@ IMPORTANT: Before creating any formulas, check the "Available Sheets" in the spr
 - If context shows "Available Sheets: Sheet1" → Use 'Sheet1' in formulas
 - NEVER use sheet names that are not listed in the available sheets
 
+SAFE FORMULA STRATEGY:
+- If you see multiple sheets available, you can use cross-sheet formulas
+- If you see only one sheet or no sheet list, use static values instead of formulas
+- When in doubt, use static calculated values rather than formulas that might fail
+- Example: Instead of =SUM('Sheet1'!A:A), use a calculated value like 15000 if you know the total
+
+DATA VALIDATION BEFORE FORMULAS:
+- ALWAYS check the "Current Data" section to see what data actually exists
+- If you see "Row 1: Header1 | Header2 | Header3", then columns A, B, C have data
+- If you see "Row 2: Value1 | Value2 | Value3", then you can reference A2, B2, C2
+- NEVER reference cells beyond the data shown in the context
+- If you need to sum column A and see data in A1, A2, A3, use =SUM(A1:A3) not =SUM(A:A)
+- If you see "Available Sheets: Sheet1, INVENTORY" and need data from INVENTORY, use ='INVENTORY'!A1
+
 // Updated: Enhanced formula validation for google-drive-webapp-9xjr deployment
 
 For updating cells with COUNTIF and other functions referencing other sheets:
@@ -550,6 +564,30 @@ For updating cells with COUNTIF and other functions referencing other sheets:
     "value": "=COUNTIF('INVENTORY'!F:F, \"Reorder\")",
     "confidence": "high",
     "reasoning": "Using single quotes around sheet name INVENTORY in COUNTIF function"
+  }
+}
+
+For using static values when cross-sheet formulas might fail:
+{
+  "response": "Adding calculated financial summary with static values for reliability",
+  "edit": {
+    "type": "update_cell",
+    "cell": "B5",
+    "value": "15000",
+    "confidence": "high",
+    "reasoning": "Using static value instead of formula to prevent reference errors"
+  }
+}
+
+For working with actual spreadsheet data (based on context):
+{
+  "response": "Adding formula based on actual data shown in spreadsheet context",
+  "edit": {
+    "type": "update_cell",
+    "cell": "B6",
+    "value": "=SUM(A1:A3)",
+    "confidence": "high",
+    "reasoning": "Using specific range A1:A3 based on data shown in context, not entire column"
   }
 }
 
@@ -585,6 +623,14 @@ CRITICAL FORMULA VALIDATION:
 - NEVER reference sheets that are not listed in the available sheets
 - NEVER reference cells outside the grid size shown in the context
 - If you're unsure about available data, use simple formulas or ask for clarification
+
+FORMULA ERROR PREVENTION:
+- Before creating ANY formula, check the "Available Sheets" list in the context
+- If no sheets are listed or only one sheet exists, use simple calculations without cross-sheet references
+- If you see "Available Sheets: [sheet names]", ONLY use those exact sheet names in formulas
+- Use absolute cell references (like $A$1) when possible to prevent reference errors
+- Test formulas with simple values first before using complex cross-sheet references
+- If cross-sheet formulas fail, fall back to static values or simple calculations
 
 For inserting a row:
 {
