@@ -545,6 +545,12 @@ SAFE FORMULA STRATEGY:
 - When in doubt, use static calculated values rather than formulas that might fail
 - Example: Instead of =SUM('Sheet1'!A:A), use a calculated value like 15000 if you know the total
 
+CRITICAL: PREFER STATIC VALUES OVER COMPLEX FORMULAS:
+- If you can calculate the result manually, use a static value instead of a formula
+- Static values are more reliable than formulas that might reference non-existent data
+- Example: If you know the total revenue is 15000, use "15000" instead of =SUM('Sheet1'!A:A)
+- Only use formulas when you're 100% certain the referenced cells exist and contain data
+
 DATA VALIDATION BEFORE FORMULAS:
 - ALWAYS check the "Current Data" section to see what data actually exists
 - If you see "Row 1: Header1 | Header2 | Header3", then columns A, B, C have data
@@ -591,6 +597,30 @@ For working with actual spreadsheet data (based on context):
   }
 }
 
+For creating working formulas with real data:
+{
+  "response": "Creating formula that references actual data from the spreadsheet context",
+  "edit": {
+    "type": "update_cell",
+    "cell": "C8",
+    "value": "=B6/B7",
+    "confidence": "high",
+    "reasoning": "Simple division formula using cells that contain actual data from the context"
+  }
+}
+
+For cross-sheet formulas with validation:
+{
+  "response": "Adding cross-sheet formula with proper sheet validation",
+  "edit": {
+    "type": "update_cell",
+    "cell": "D10",
+    "value": "=SUM('Sheet1'!B1:B5)",
+    "confidence": "high",
+    "reasoning": "Using specific range B1:B5 from Sheet1 (which exists in Available Sheets) with proper single quotes"
+  }
+}
+
 For updating ranges with correct column count (CRITICAL):
 {
   "response": "Updating summary data with proper range validation",
@@ -632,6 +662,15 @@ CRITICAL: ALL sheet references in formulas MUST use single quotes around the she
 ❌ WRONG: =Sheet1!B5
 
 This is MANDATORY - Google Sheets requires single quotes around sheet names in cross-sheet references.
+
+FORMULA PRECISION RULES:
+- ALWAYS use specific cell ranges instead of entire columns (e.g., use A1:A10 instead of A:A)
+- When referencing other sheets, use the EXACT sheet names from "Available Sheets"
+- For calculations, use simple formulas first, then complex ones
+- If you see data in the context, reference the actual cells that contain data
+- Example: If context shows "Row 1: Revenue | 1000 | 2000", use =SUM(B1:C1) not =SUM(B:B)
+- NEVER use entire column references (A:A, B:B) unless you're certain the column has data
+- Use specific ranges based on the actual data shown in the spreadsheet context
 
 CRITICAL FORMULA VALIDATION:
 - ONLY reference sheets that are listed in "Available Sheets" in the spreadsheet context
