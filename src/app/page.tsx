@@ -3,9 +3,11 @@
 import { useState, useRef, useEffect } from 'react';
 import FileList from '@/components/FileList';
 import ChatPanel from '@/components/ChatPanel';
-import { File, Message, DocumentContent, DocumentContentItem } from '@/types';
+import { File, Message, DocumentContent, DocumentContentItem, AuthUser } from '@/types';
 import { FIREBASE_FUNCTIONS } from '@/lib/config';
 import { ErrorToast, useErrorToast } from '@/components/ErrorToast';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 
 export default function Home() {
@@ -13,6 +15,7 @@ export default function Home() {
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
   const [documentContent, setDocumentContent] = useState<DocumentContent | null>(null);
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [pendingEdit, setPendingEdit] = useState<{
     messageId: string;
     type: string;
@@ -85,6 +88,15 @@ export default function Home() {
       document.body.style.userSelect = '';
     };
   }, [isResizing, resizeType, leftWidth, rightWidth]);
+
+  // Listen for auth state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const startResize = (type: 'left' | 'right') => {
     setIsResizing(true);
@@ -519,6 +531,7 @@ export default function Home() {
             selectedModel={selectedModel}
             onModelChange={setSelectedModel}
             isApplyingEdit={isApplyingEdit}
+            user={user}
           />
         </div>
       </div>

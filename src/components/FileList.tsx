@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
 import { auth, functions } from '@/lib/firebase';
 import Image from 'next/image';
 import { httpsCallable } from 'firebase/functions';
@@ -172,15 +172,6 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
   };
 
   // Handle Sign Out
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      setUser(null);
-      setFiles([]);
-    } catch (error) {
-      console.error('Sign-out error:', error);
-    }
-  };
 
   // Load files from Google Drive via Firebase Functions
   const loadFiles = useCallback(async () => {
@@ -388,15 +379,6 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
               </span>
             </div>
           </div>
-          <button
-            onClick={handleSignOut}
-            className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 hover:text-gray-800 rounded-lg transition-all duration-200 flex items-center space-x-1"
-          >
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span>Sign out</span>
-          </button>
         </div>
         <button
           onClick={loadFiles}

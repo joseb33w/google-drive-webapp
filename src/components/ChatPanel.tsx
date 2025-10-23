@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { File, Message, DocumentContent, DocumentContentItem } from '@/types';
+import { File, Message, DocumentContent, DocumentContentItem, AuthUser } from '@/types';
 import { ErrorToast, useErrorToast } from './ErrorToast';
+import { signOut } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 interface EditProposal {
   messageId: string;
@@ -22,9 +24,10 @@ interface ChatPanelProps {
   selectedModel: string;
   onModelChange: (model: string) => void;
   isApplyingEdit?: boolean;
+  user: AuthUser | null;
 }
 
-export default function ChatPanel({ selectedFile, documentContent, chatHistory, onChatUpdate, onEditProposal, onAcceptEdit, onRejectEdit, selectedModel, onModelChange, isApplyingEdit = false }: ChatPanelProps) {
+export default function ChatPanel({ selectedFile, documentContent, chatHistory, onChatUpdate, onEditProposal, onAcceptEdit, onRejectEdit, selectedModel, onModelChange, isApplyingEdit = false, user }: ChatPanelProps) {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -172,6 +175,15 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
     onChatUpdate([]);
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Sign-out error:', error);
+      addToast('Failed to sign out', 'error');
+    }
+  };
+
   // Cleanup abort controller on component unmount
   useEffect(() => {
     return () => {
@@ -196,22 +208,23 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
             )}
           </div>
           <div className="flex items-center gap-2">
-            {/* Model Selection */}
-            <select
-              value={selectedModel}
-              onChange={(e) => onModelChange(e.target.value)}
-              className="text-xs border border-gray-300 rounded px-2 py-1 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="gpt-5-chat-latest">GPT-5 Chat Latest</option>
-              <option value="claude-4.5-sonnet">Claude 4.5 Sonnet</option>
-              <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-            </select>
             <button
               onClick={clearChat}
               className="text-xs text-gray-500 hover:text-gray-700"
             >
               Clear
             </button>
+            {user && (
+              <button
+                onClick={handleSignOut}
+                className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 hover:text-gray-800 rounded-lg transition-all duration-200 flex items-center space-x-1"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span>Sign out</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -375,6 +388,20 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
         <p className="text-xs text-gray-500 mt-2">
           Press Enter to send, Shift+Enter for new line
         </p>
+        
+        {/* Model Selection */}
+        <div className="mt-3 flex items-center gap-2">
+          <label className="text-xs text-gray-600 font-medium">Model:</label>
+          <select
+            value={selectedModel}
+            onChange={(e) => onModelChange(e.target.value)}
+            className="text-xs border border-gray-300 rounded px-2 py-1 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="gpt-5-chat-latest">GPT-5 Chat Latest</option>
+            <option value="claude-4.5-sonnet">Claude 4.5 Sonnet</option>
+            <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+          </select>
+        </div>
       </div>
       
       {/* Error Toasts */}
