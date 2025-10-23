@@ -533,6 +533,12 @@ For updating cells with cross-sheet formulas:
   }
 }
 
+IMPORTANT: Before creating any formulas, check the "Available Sheets" in the spreadsheet context. For example:
+- If context shows "Available Sheets: Sheet1, INVENTORY" → Use 'Sheet1' and 'INVENTORY' in formulas
+- If context shows "Available Sheets: Summary" → Use 'Summary' in formulas  
+- If context shows "Available Sheets: Sheet1" → Use 'Sheet1' in formulas
+- NEVER use sheet names that are not listed in the available sheets
+
 For updating cells with COUNTIF and other functions referencing other sheets:
 {
   "response": "Adding COUNTIF formulas to count items from other sheets",
@@ -568,6 +574,15 @@ CRITICAL: ALL sheet references in formulas MUST use single quotes around the she
 ❌ WRONG: =Sheet1!B5
 
 This is MANDATORY - Google Sheets requires single quotes around sheet names in cross-sheet references.
+
+CRITICAL FORMULA VALIDATION:
+- ONLY reference sheets that are listed in "Available Sheets" in the spreadsheet context
+- ONLY reference cells that exist in the current spreadsheet structure
+- If you see "Available Sheets: Sheet1, INVENTORY" then ONLY use 'Sheet1' and 'INVENTORY' in formulas
+- If you see "Available Sheets: Summary" then ONLY use 'Summary' in formulas
+- NEVER reference sheets that are not listed in the available sheets
+- NEVER reference cells outside the grid size shown in the context
+- If you're unsure about available data, use simple formulas or ask for clarification
 
 For inserting a row:
 {
