@@ -45,43 +45,51 @@ function fixCommonJsonIssues(jsonString: string): string {
     let fixed = jsonString.trim();
     
     // Fix 1: Handle unescaped newlines in strings (most common issue with Claude and GPT)
-    // Count newlines to verify we're escaping them
+    // Simple approach: replace all literal newlines with escaped newlines when inside strings
     let newlineCount = 0;
     let result = '';
     let inString = false;
+    let backslashCount = 0;
     
     for (let i = 0; i < fixed.length; i++) {
       const char = fixed[i];
-      const prevChar = i > 0 ? fixed[i - 1] : '';
       
-      // Check if this quote is escaped
-      const isEscaped = prevChar === '\\' && (i < 2 || fixed[i - 2] !== '\\');
-      
-      // Toggle string state on unescaped quotes
-      if (char === '"' && !isEscaped) {
-        inString = !inString;
+      // Count consecutive backslashes
+      if (char === '\\') {
+        backslashCount++;
         result += char;
-      } else if (inString) {
-        // Inside a string value, escape special characters
-        if (char === '\n') {
-          result += '\\n';
-          newlineCount++;
-        } else if (char === '\r') {
-          result += '\\r';
-        } else if (char === '\t') {
-          result += '\\t';
-        } else if (char === '\\' && i + 1 < fixed.length && fixed[i + 1] !== '\\' && fixed[i + 1] !== 'n' && fixed[i + 1] !== 'r' && fixed[i + 1] !== 't' && fixed[i + 1] !== '"') {
-          // Only escape backslashes that aren't already part of escape sequences
-          result += '\\\\';
-        } else {
-          result += char;
+        continue;
+      }
+      
+      // Check if quote is escaped (odd number of backslashes before it)
+      if (char === '"') {
+        const isEscaped = backslashCount % 2 === 1;
+        if (!isEscaped) {
+          inString = !inString;
         }
+        result += char;
+        backslashCount = 0;
+        continue;
+      }
+      
+      // Reset backslash count for non-backslash, non-quote chars
+      backslashCount = 0;
+      
+      // If we're inside a string, escape newlines
+      if (inString && char === '\n') {
+        result += '\\n';
+        newlineCount++;
+      } else if (inString && char === '\r') {
+        result += '\\r';
+      } else if (inString && char === '\t') {
+        result += '\\t';
       } else {
         result += char;
       }
     }
     
     console.log('Escaped', newlineCount, 'newlines in JSON strings');
+    console.log('Final inString state:', inString, '(should be false)');
     fixed = result;
     
     // Fix 2: Try to find and close unclosed objects/arrays
@@ -396,9 +404,14 @@ PRECISION REQUIREMENTS:
 CRITICAL CONTENT REQUIREMENTS:
 - NEVER use computer programming language, technical jargon, or code-related terms
 - Use natural, human language appropriate for the document context
-- Avoid terms like "protocol", "source code", "algorithm", "system", "program", "function"
+- Avoid terms like "protocol", "source code", "algorithm", "system", "program", "function", "implementation", "execute", "process", "data"
 - Write in the same style and tone as the existing document
 - Focus on narrative, descriptive, and human-centered language
+- Write clean, natural paragraphs with proper spacing between them
+- Do NOT use markdown formatting like # or ## - this is a Google Doc, not markdown
+- Do NOT include technical notation like \\n or \\t - write natural, readable text
+- Ensure the content flows naturally and is well-structured
+- Use clear paragraph breaks for readability
 
 CRITICAL JSON FORMATTING REQUIREMENTS:
 - ALWAYS return valid JSON - no unterminated strings, no unescaped quotes
