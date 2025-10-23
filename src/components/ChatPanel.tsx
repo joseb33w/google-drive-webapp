@@ -186,18 +186,6 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
 
   return (
     <div className="flex flex-col h-full overflow-x-hidden bg-white min-h-0">
-      {/* Chat header */}
-      <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div>
-            {selectedFile && (
-              <h3 className="text-lg font-semibold text-gray-900 truncate">
-                {selectedFile.name}
-              </h3>
-            )}
-          </div>
-        </div>
-      </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white min-h-0">

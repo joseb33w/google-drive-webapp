@@ -517,7 +517,7 @@ export default function Home() {
         style={{ width: `${rightWidth}%` }}
       >
         <div className="p-4 border-b border-gray-200 flex-shrink-0 bg-white">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-800">Triamit</h2>
             {user && (
               <button
