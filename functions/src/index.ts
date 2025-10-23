@@ -591,11 +591,29 @@ For working with actual spreadsheet data (based on context):
   }
 }
 
-IMPORTANT: When using "update_range", ensure the range exactly matches the number of rows in your values array:
-- If you have 3 rows of data, use range like "A1:C3" (3 rows)
-- If you have 10 rows of data, use range like "A1:E10" (10 rows)
-- The range must include ALL rows you're writing to, including headers
-- Count your values array length and match it exactly to the range row count
+For updating ranges with correct column count (CRITICAL):
+{
+  "response": "Updating summary data with proper range validation",
+  "edit": {
+    "type": "update_range",
+    "range": "A1:D10",
+    "values": [
+      ["Header1", "Header2", "Header3", "Header4"],
+      ["Data1", "Data2", "Data3", "Data4"],
+      ["Data5", "Data6", "Data7", "Data8"]
+    ],
+    "confidence": "high",
+    "reasoning": "Range A1:D10 has 4 columns (A,B,C,D), so each row has exactly 4 values"
+  }
+}
+
+CRITICAL RANGE VALIDATION: When using "update_range", ensure the range EXACTLY matches your data dimensions:
+- COUNT YOUR COLUMNS: If your data has 4 columns, use range like "A1:D10" (A, B, C, D = 4 columns)
+- COUNT YOUR ROWS: If your data has 10 rows, use range like "A1:D10" (rows 1-10)
+- NEVER exceed the range: If range is "A1:D10", your data can only have 4 columns (A, B, C, D)
+- CHECK EACH ROW: Every row in your values array must have the same number of columns
+- Example: If range is "A1:D10", each row must have exactly 4 values: ["col1", "col2", "col3", "col4"]
+- If you need 5 columns, change range to "A1:E10" (A, B, C, D, E = 5 columns)
 
 CROSS-SHEET FORMULAS: When referencing other sheets in formulas, use the correct syntax:
 - To reference a cell from another sheet: ='SheetName'!A1 (use single quotes around sheet name)
