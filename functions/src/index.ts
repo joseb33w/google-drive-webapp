@@ -845,6 +845,7 @@ export const googleDriveOperations = onRequest({
 
       case 'rewrite_document': {
         // Complete document rewrite - delete all content and insert new content
+        // Fixed: Handle empty documents correctly (endIndex > 2 check prevents empty range error)
         const doc = await docs.documents.get({
           documentId: params.documentId
         });
@@ -860,8 +861,10 @@ export const googleDriveOperations = onRequest({
         // Create batch update: delete all content, then insert new content
         const requests = [];
         
-        // Only delete content if the document has content (endIndex > 1)
-        if (endIndex > 1) {
+        // Only delete content if document has meaningful content
+        // endIndex > 2 means there's more than just the final newline
+        // Google Docs always has at least 1 character (the final newline at index 1)
+        if (endIndex > 2) {
           requests.push({
             deleteContentRange: {
               range: {
