@@ -1648,6 +1648,31 @@ export const googleDriveOperations = onRequest({
   }
 });
 
+// Clear OAuth tokens for re-authorization
+export const clearOAuthTokens = onCall({ 
+  region: 'us-south1',
+  timeoutSeconds: 30,
+  memory: '256MiB'
+}, async (request) => {
+  // Verify user is authenticated
+  if (!request.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const uid = request.auth.uid;
+  const db = admin.firestore();
+  
+  try {
+    // Delete user's OAuth tokens
+    await db.collection('userTokens').doc(uid).delete();
+    console.log('Cleared OAuth tokens for user:', uid);
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error clearing OAuth tokens:', error);
+    throw new functions.https.HttpsError('internal', 'Failed to clear OAuth tokens');
+  }
+});
+
 // Store OAuth tokens when user signs in with Google
 export const storeOAuthTokens = onCall({ 
   region: 'us-south1',

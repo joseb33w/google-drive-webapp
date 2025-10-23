@@ -239,7 +239,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
         // Check for specific error types
         if (data.error.includes('Quota exceeded') || data.error.includes('quota metric')) {
           addToast('Google Drive API quota exceeded. Please wait a minute and try again.', 'warning');
-        } else if (data.error.includes('OAuth tokens not found') || data.needsAuth) {
+        } else if (data.error.includes('OAuth tokens not found') || data.error.includes('Refresh token') || data.needsAuth) {
           addToast('Please authorize Google Drive access first', 'warning');
           setNeedsOAuth(true);
         } else {
