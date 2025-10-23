@@ -521,6 +521,11 @@ For updating a range of cells:
   }
 }
 
+IMPORTANT: When using "update_range", ensure the range exactly matches the number of rows in your values array:
+- If you have 3 rows of data, use range like "A1:C3" (3 rows)
+- If you have 10 rows of data, use range like "A1:E10" (10 rows)
+- The range must include ALL rows you're writing to, including headers
+
 For inserting a row:
 {
   "response": "Brief explanation of what you're changing and why",
