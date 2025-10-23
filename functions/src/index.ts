@@ -420,15 +420,27 @@ CRITICAL CONTENT REQUIREMENTS:
 - Ensure the content flows naturally and is well-structured
 - Use clear paragraph breaks for readability
 
+CRITICAL FORMATTING REQUIREMENTS:
+- NEVER use literal \\n\\n sequences in your text - these will appear as text in the document
+- Write natural paragraph breaks by simply pressing Enter between paragraphs
+- Structure your content with proper headings, subheadings, and paragraph organization
+- Use proper sentence structure and complete thoughts
+- ALWAYS finish your complete thoughts - never leave sentences or paragraphs incomplete
+- Ensure every section has a proper conclusion
+- Write complete, coherent paragraphs that flow logically from one to the next
+- For historical content, organize chronologically with clear time periods
+- For complex topics, break into logical sections with clear transitions
+
 CRITICAL JSON FORMATTING REQUIREMENTS:
 - ALWAYS return valid JSON - no unterminated strings, no unescaped quotes
 - Escape all quotes inside string values with backslashes (\\")
-- Escape all newlines inside string values with \\\\n
+- For newContent in rewrite operations: Use actual line breaks (not \\n sequences) for paragraph separation
+- For findText and replaceText: Use actual line breaks (not \\n sequences) for natural text
 - Escape all carriage returns with \\\\r and tabs with \\\\t
 - Ensure all JSON objects and arrays are properly closed
 - NO trailing commas before closing braces or brackets
 - Test your JSON before responding - it MUST be parseable
-- If your response contains newlines, you MUST escape them as \\\\n
+- IMPORTANT: When writing document content, use real paragraph breaks, not \\n\\n sequences
 
 JSON VALIDATION CHECKLIST:
 1. Every opening brace { has a closing brace }
@@ -456,11 +468,20 @@ Return JSON format for COMPLETE REWRITES:
   "response": "Brief explanation of what you're changing and why",
   "edit": {
     "type": "rewrite",
-    "newContent": "THE COMPLETE NEW DOCUMENT CONTENT WITH ALL TEXT",
+    "newContent": "THE COMPLETE NEW DOCUMENT CONTENT WITH ALL TEXT - MUST BE COMPLETE AND FINISHED",
     "confidence": "high",
     "reasoning": "Why a complete rewrite is needed and how it improves the document"
   }
 }
+
+COMPLETION REQUIREMENTS:
+- ALWAYS write complete, finished content - never leave sentences or thoughts incomplete
+- For historical topics: Cover the full timeline from beginning to end
+- For complex subjects: Address all major aspects and provide proper conclusions
+- Ensure every paragraph has a complete thought and proper ending
+- Write with proper document structure: introduction, main content, conclusion
+- Use clear transitions between sections and paragraphs
+- Never cut off mid-sentence or mid-thought
 
 For non-edit requests, respond with plain text.`;
 
