@@ -362,11 +362,11 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
           <div className="flex items-center space-x-3">
             <div className="relative">
               <Image
-                src={user.photoURL || '/default-avatar.png'}
-                alt={user.displayName || 'User'}
+                src="/authoritative-lotus-logo.svg"
+                alt="Triamit Logo"
                 width={40}
                 height={40}
-                className="w-10 h-10 rounded-full border-2 border-white shadow-md"
+                className="w-10 h-10 rounded-full border-2 border-white shadow-md bg-white p-1"
               />
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
             </div>
@@ -374,18 +374,9 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
               <span className="text-sm font-medium text-gray-800 truncate">
                 {user.displayName || 'User'}
               </span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 truncate">
-                  {user.email}
-                </span>
-                <Image 
-                  src="/authoritative-lotus-logo.svg" 
-                  alt="Triamit Logo" 
-                  width={16} 
-                  height={16}
-                  className="w-4 h-4 flex-shrink-0"
-                />
-              </div>
+              <span className="text-xs text-gray-500 truncate">
+                {user.email}
+              </span>
             </div>
           </div>
         </div>

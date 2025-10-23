@@ -6,7 +6,7 @@ import ChatPanel from '@/components/ChatPanel';
 import { File, Message, DocumentContent, DocumentContentItem, AuthUser } from '@/types';
 import { FIREBASE_FUNCTIONS } from '@/lib/config';
 import { ErrorToast, useErrorToast } from '@/components/ErrorToast';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
 
@@ -517,7 +517,26 @@ export default function Home() {
         style={{ width: `${rightWidth}%` }}
       >
         <div className="p-4 border-b border-gray-200 flex-shrink-0 bg-white">
-          <h2 className="text-lg font-semibold text-gray-800">Triamit</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-semibold text-gray-800">Triamit</h2>
+            {user && (
+              <button
+                onClick={async () => {
+                  try {
+                    await signOut(auth);
+                  } catch (error) {
+                    console.error('Error signing out:', error);
+                  }
+                }}
+                className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200 flex items-center space-x-1 shadow-sm"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span>Sign out</span>
+              </button>
+            )}
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto min-h-0 bg-white">
           <ChatPanel 

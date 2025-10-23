@@ -3,8 +3,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { File, Message, DocumentContent, DocumentContentItem, AuthUser } from '@/types';
 import { ErrorToast, useErrorToast } from './ErrorToast';
-import { signOut } from 'firebase/auth';
-import { auth } from '../lib/firebase';
 
 interface EditProposal {
   messageId: string;
@@ -175,14 +173,6 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
     onChatUpdate([]);
   };
 
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error('Sign-out error:', error);
-      addToast('Failed to sign out', 'error');
-    }
-  };
 
   // Cleanup abort controller on component unmount
   useEffect(() => {
@@ -200,24 +190,10 @@ export default function ChatPanel({ selectedFile, documentContent, chatHistory, 
       <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">Triamit</h3>
             {selectedFile && (
-              <p className="text-sm font-bold text-gray-900 truncate">
+              <h3 className="text-lg font-semibold text-gray-900 truncate">
                 {selectedFile.name}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {user && (
-              <button
-                onClick={handleSignOut}
-                className="px-3 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200 flex items-center space-x-1 shadow-sm"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                <span>Sign out</span>
-              </button>
+              </h3>
             )}
           </div>
         </div>
