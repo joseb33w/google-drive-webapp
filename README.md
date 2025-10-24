@@ -1,5 +1,9 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Google Drive Web App with AI Chat
+
+A powerful web application that integrates Google Drive with AI-powered document editing capabilities.
+
 ## Getting Started
 
 First, run the development server:
