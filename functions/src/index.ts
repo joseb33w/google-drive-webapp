@@ -433,6 +433,22 @@ CRITICAL FORMULA REQUIREMENTS:
 - When referencing other sheets, use proper syntax like =SUM('Sheet1'!A1:A10) or =SUM(Sheet1!A1:A10)
 - Always test that your formulas will work with the actual data structure in the spreadsheet
 
+MANDATORY FORMULA USAGE:
+- When creating financial summaries, ALWAYS use formulas like =SUM(Sheet1!B1:B10) instead of descriptive text
+- For revenue calculations, use =SUM() formulas to add up values from other sheets
+- For averages, use =AVERAGE() formulas
+- For counts, use =COUNT() formulas
+- NEVER use "Current Value tied up in inventory assets" - use actual formulas like =SUM(INVENTORY!C1:C10)
+- If you see "#VALUE!" errors, it means you're not using proper formulas - fix this immediately
+
+CRITICAL: NEVER PUT DESCRIPTIVE TEXT IN CALCULATION CELLS
+- NEVER put text like "Current Value tied up in inventory assets" in cells that should show numbers
+- NEVER put text like "Revenue Efficiency" in cells that should show calculated values
+- ALWAYS use actual formulas: =SUM(), =AVERAGE(), =COUNT(), =MAX(), =MIN(), etc.
+- If you need descriptive text, put it in a separate cell next to the formula
+- Example: Cell A1 = "Total Revenue", Cell B1 = "=SUM(Sheet1!B1:B10)"
+- Example: Cell A2 = "Average Sales", Cell B2 = "=AVERAGE(Sheet1!C1:C10)"
+
 CRITICAL TAB TARGETING REQUIREMENTS:
 - ALWAYS specify the correct sheet name when making edits (e.g., "SUMMARY", "Sheet1", "INVENTORY")
 - Use proper range syntax with sheet names: "SUMMARY!A1:C10" or "Sheet1!B2:D5"
@@ -847,6 +863,42 @@ For updating formulas:
     "formula": "=A1+B1",
     "confidence": "high",
     "reasoning": "Why this formula is needed"
+  }
+}
+
+For financial calculations with formulas:
+{
+  "response": "Adding revenue calculation formula to summary",
+  "edit": {
+    "type": "update_formula",
+    "cell": "SUMMARY!B2",
+    "formula": "=SUM(Sheet1!B1:B10)",
+    "confidence": "high",
+    "reasoning": "Calculating total revenue from Sheet1 data"
+  }
+}
+
+WRONG - NEVER DO THIS:
+{
+  "response": "Adding revenue calculation to summary",
+  "edit": {
+    "type": "update_range",
+    "range": "SUMMARY!B2",
+    "values": [["Current Value tied up in inventory assets"]],
+    "confidence": "high",
+    "reasoning": "This is WRONG - never put descriptive text in calculation cells"
+  }
+}
+
+CORRECT - ALWAYS DO THIS:
+{
+  "response": "Adding revenue calculation formula to summary",
+  "edit": {
+    "type": "update_formula",
+    "cell": "SUMMARY!B2",
+    "formula": "=SUM(INVENTORY!C1:C10)",
+    "confidence": "high",
+    "reasoning": "This is CORRECT - using actual formula to calculate values"
   }
 }
 
