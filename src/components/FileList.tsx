@@ -56,12 +56,15 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
             oauthExpiry: Date.now() + (3600 * 1000) // 1 hour default
           });
           console.log('OAuth tokens stored successfully');
+          addToast('Successfully signed in with Google!', 'info', 3000);
         } catch (error) {
           console.error('Failed to store OAuth tokens:', error);
+          addToast('Sign-in successful but failed to store tokens. You may need to reconnect Google Drive.', 'warning', 5000);
         }
       } else {
         console.warn('No OAuth access token received. User may need to re-authorize.');
         setNeedsOAuth(true);
+        addToast('Sign-in successful but no access token received. You may need to reconnect Google Drive.', 'warning', 5000);
       }
       
       // Clear any existing session ID since we're using Firebase Auth now
@@ -70,7 +73,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
     } catch (error) {
       console.error('Sign-in error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to sign in with Google';
-      addToast(`Sign-in failed: ${errorMessage}`, 'error');
+      addToast(`Sign-in failed: ${errorMessage}`, 'error', 7000);
     }
   };
 
@@ -125,7 +128,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
     } catch (error) {
       console.error('OAuth authorization error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to authorize Google Drive access';
-      addToast(`OAuth authorization failed: ${errorMessage}`, 'error');
+      addToast(`Google Drive connection failed: ${errorMessage}`, 'error', 7000);
       
       // Clean up interval on error
       if (oauthCheckIntervalRef.current) {
@@ -140,6 +143,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
     try {
       if (!user) {
         console.error('User not authenticated');
+        addToast('User not authenticated. Please sign in first.', 'error', 5000);
         return;
       }
       
@@ -161,13 +165,17 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
       if (data.success) {
         console.log('OAuth tokens exchanged successfully');
         setNeedsOAuth(false);
+        addToast('Successfully connected to Google Drive!', 'info', 3000);
         // Try to load files now
         loadFiles();
       } else {
         console.error('Failed to exchange OAuth code:', data.error);
+        addToast(`Google Drive connection failed: ${data.error}`, 'error', 7000);
       }
     } catch (error) {
       console.error('OAuth callback error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      addToast(`Google Drive connection failed: ${errorMessage}`, 'error', 7000);
     }
   };
 
@@ -398,7 +406,7 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              <span>Connect to Google Drive</span>
+              <span>Load Google Drive Files</span>
             </>
           )}
         </button>
@@ -409,8 +417,8 @@ export default function FileList({ onFileSelect, selectedFile }: FileListProps) 
                 <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
               <div>
-                <p className="text-sm font-medium text-yellow-800">Google Drive Authorization Required</p>
-                <p className="text-xs text-yellow-700 mt-1">Click the button below to authorize Google Drive access.</p>
+                <p className="text-sm font-medium text-yellow-800">Google Drive Connection Required</p>
+                <p className="text-xs text-yellow-700 mt-1">You need to connect to Google Drive to access your files. Click the button below to authorize access.</p>
               </div>
             </div>
             <button
