@@ -386,13 +386,13 @@ export const chatHttp = onRequest({
 EDITING CAPABILITIES:
 You can perform ANY of these operations on documents and spreadsheets:
 
-DOCUMENT OPERATIONS:
+DOCUMENT OPERATIONS (for Google Docs):
 - "replace": Find and replace specific text (for small targeted changes)
 - "insert": Add new text at a specific location
 - "delete": Remove specific text
 - "rewrite": COMPLETELY REWRITE the entire document (for major restructuring or full rewrites)
 
-SPREADSHEET OPERATIONS:
+SPREADSHEET OPERATIONS (for Google Sheets):
 - "update_cell": Update a specific cell value (e.g., A1, B2, etc.)
 - "update_range": Update multiple cells in a range (e.g., A1:C3)
 - "insert_row": Insert a new row at a specific position
@@ -403,7 +403,7 @@ SPREADSHEET OPERATIONS:
 - "format_cell": Apply formatting to cells (bold, italic, color, etc.)
 
 WHEN TO USE EACH TYPE:
-DOCUMENT EDITS:
+DOCUMENT EDITS (for Google Docs):
 - Use "replace" for small, targeted changes to existing text
 - Use "insert" to add new content at the end or middle of document
 - Use "delete" to remove specific sections
@@ -414,9 +414,9 @@ DOCUMENT EDITS:
   * Change the document's overall structure or flow
   * Transform the document's format or style completely
 
-SPREADSHEET EDITS:
+SPREADSHEET EDITS (for Google Sheets):
 - Use "update_cell" for single cell changes
-- Use "update_range" for updating multiple related cells
+- Use "update_range" for updating multiple related cells with static values
 - Use "insert_row"/"insert_column" to add new data structure
 - Use "delete_row"/"delete_column" to remove data
 - Use "update_formula" for calculations and data analysis
@@ -448,6 +448,20 @@ CRITICAL: NEVER PUT DESCRIPTIVE TEXT IN CALCULATION CELLS
 - If you need descriptive text, put it in a separate cell next to the formula
 - Example: Cell A1 = "Total Revenue", Cell B1 = "=SUM(Sheet1!B1:B10)"
 - Example: Cell A2 = "Average Sales", Cell B2 = "=AVERAGE(Sheet1!C1:C10)"
+
+CRITICAL OPERATION TYPE RULES:
+- Use "update_formula" for ANY calculation that needs a formula (=SUM, =AVERAGE, =COUNT, etc.)
+- Use "update_range" ONLY for static text, headers, or labels
+- Use "update_cell" ONLY for single static values (not formulas)
+- NEVER use "update_range" for calculations - always use "update_formula"
+- If you need to calculate something, ALWAYS use "update_formula" with a formula starting with =
+
+STOP THE #VALUE! ERRORS:
+- The "#VALUE!" error happens when you put descriptive text in cells that should contain formulas
+- NEVER use "update_range" with values like ["Current Value tied up in inventory assets"]
+- ALWAYS use "update_formula" with actual formulas like "=SUM(INVENTORY!C1:C10)"
+- If you see "#VALUE!" in the spreadsheet, it means you used the wrong operation type
+- Fix: Replace "update_range" with "update_formula" and use proper formulas
 
 CRITICAL TAB TARGETING REQUIREMENTS:
 - ALWAYS specify the correct sheet name when making edits (e.g., "SUMMARY", "Sheet1", "INVENTORY")
@@ -507,7 +521,7 @@ JSON VALIDATION CHECKLIST:
 6. No trailing commas before } or ]
 7. The entire response is valid JSON
 
-Return JSON format for TARGETED EDITS (replace/insert/delete):
+Return JSON format for DOCUMENT EDITS (Google Docs only):
 {
   "response": "Brief explanation of what you're changing and why",
   "edit": {
@@ -519,7 +533,7 @@ Return JSON format for TARGETED EDITS (replace/insert/delete):
   }
 }
 
-Return JSON format for COMPLETE REWRITES:
+Return JSON format for COMPLETE DOCUMENT REWRITES (Google Docs only):
 {
   "response": "Brief explanation of what you're changing and why",
   "edit": {
@@ -530,7 +544,7 @@ Return JSON format for COMPLETE REWRITES:
   }
 }
 
-Return JSON format for SPREADSHEET OPERATIONS:
+Return JSON format for SPREADSHEET OPERATIONS (Google Sheets only):
 
 For updating a single cell:
 {
@@ -902,6 +916,40 @@ CORRECT - ALWAYS DO THIS:
   }
 }
 
+MORE CORRECT EXAMPLES:
+{
+  "response": "Adding total revenue formula",
+  "edit": {
+    "type": "update_formula",
+    "cell": "SUMMARY!B3",
+    "formula": "=SUM(Sheet1!B1:B10)",
+    "confidence": "high",
+    "reasoning": "Calculating total revenue from Sheet1 data"
+  }
+}
+
+{
+  "response": "Adding average sales formula",
+  "edit": {
+    "type": "update_formula",
+    "cell": "SUMMARY!B4",
+    "formula": "=AVERAGE(Sheet1!C1:C10)",
+    "confidence": "high",
+    "reasoning": "Calculating average sales from Sheet1 data"
+  }
+}
+
+{
+  "response": "Adding inventory count formula",
+  "edit": {
+    "type": "update_formula",
+    "cell": "SUMMARY!B5",
+    "formula": "=COUNT(INVENTORY!A1:A10)",
+    "confidence": "high",
+    "reasoning": "Counting inventory items from INVENTORY sheet"
+  }
+}
+
 For updating ranges with formulas:
 {
   "response": "Brief explanation of what you're changing and why",
@@ -937,6 +985,14 @@ For non-edit requests, respond with plain text.`;
       
       if (documentContext.mimeType === 'application/vnd.google-apps.document') {
         systemPrompt += `\n- Content: ${documentContext.content || 'No content available'}`;
+        systemPrompt += `\n\nIMPORTANT: This is a Google DOCUMENT. Use ONLY document operations:
+- "replace": For text changes
+- "insert": For adding text
+- "delete": For removing text
+- "rewrite": For complete document rewrites
+
+DO NOT use spreadsheet operations like update_cell, update_range, or update_formula for documents.`;
+        
       } else if (documentContext.mimeType === 'application/vnd.google-apps.spreadsheet' && documentContext.spreadsheetData) {
         systemPrompt += `\n- Spreadsheet Data:
   * Current Sheet: ${documentContext.spreadsheetData.sheetTitle} (ID: ${documentContext.spreadsheetData.sheetId})
@@ -954,6 +1010,15 @@ For non-edit requests, respond with plain text.`;
         } else {
           systemPrompt += `\n    No data found in current sheet`;
         }
+        
+        systemPrompt += `\n\nIMPORTANT: This is a Google SPREADSHEET. Use ONLY spreadsheet operations:
+- "update_cell": For single cell changes
+- "update_range": For multiple cells with static values
+- "update_formula": For calculations (ALWAYS use formulas like =SUM(), =AVERAGE(), etc.)
+- "insert_row"/"insert_column": For adding data structure
+- "delete_row"/"delete_column": For removing data
+
+DO NOT use document operations like replace, insert, delete, or rewrite for spreadsheets.`;
       }
     }
 
