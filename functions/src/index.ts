@@ -1038,8 +1038,10 @@ async function getOAuthClient(uid: string) {
     throw new Error('Access token not found. Please sign in with Google again.');
   }
   
+  // Note: Firebase Auth doesn't provide refresh tokens by default
+  // We'll work with just the access token for now
   if (!tokens?.refresh_token) {
-    throw new Error('Refresh token not found. Please sign in with Google again to get a new refresh token.');
+    console.log('No refresh token found, using access token only');
   }
   
   // Create OAuth2 client for work.triamit.com domain
@@ -1051,7 +1053,7 @@ async function getOAuthClient(uid: string) {
   
   oauth2Client.setCredentials({
     access_token: tokens.access_token,
-    refresh_token: tokens.refresh_token,
+    refresh_token: tokens.refresh_token || undefined,
     expiry_date: tokens.expiry_date
   });
   
