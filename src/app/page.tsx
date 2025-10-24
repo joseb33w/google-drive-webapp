@@ -13,6 +13,7 @@ import { auth } from '@/lib/firebase';
 
 
 export default function Home() {
+  // Production ready Google Drive web app
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
   const [documentContent, setDocumentContent] = useState<DocumentContent | null>(null);
