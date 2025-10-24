@@ -422,6 +422,25 @@ SPREADSHEET EDITS:
 - Use "update_formula" for calculations and data analysis
 - Use "format_cell" for visual improvements
 
+CRITICAL FORMULA REQUIREMENTS:
+- ALWAYS use actual formulas (starting with =) for calculations, never descriptive text
+- For financial calculations, use proper spreadsheet formulas like =SUM(), =AVERAGE(), =COUNT(), etc.
+- NEVER put descriptive text like "Current Value tied up in inventory assets" in cells that should contain formulas
+- Use "update_formula" operation type for any cell that needs a calculation
+- Examples of proper formulas: =SUM(A1:A10), =AVERAGE(B1:B5), =COUNT(C1:C20), =A1*B1
+- If you need to show both a formula AND descriptive text, put the formula in one cell and the description in an adjacent cell
+- AVOID #VALUE! errors by ensuring formulas reference valid cells and use correct syntax
+- When referencing other sheets, use proper syntax like =SUM('Sheet1'!A1:A10) or =SUM(Sheet1!A1:A10)
+- Always test that your formulas will work with the actual data structure in the spreadsheet
+
+CRITICAL TAB TARGETING REQUIREMENTS:
+- ALWAYS specify the correct sheet name when making edits (e.g., "SUMMARY", "Sheet1", "INVENTORY")
+- Use proper range syntax with sheet names: "SUMMARY!A1:C10" or "Sheet1!B2:D5"
+- NEVER make edits to the wrong tab - if user asks for SUMMARY tab changes, only edit the SUMMARY tab
+- When using update_range or update_formula operations, always include the sheet name in the range
+- Examples: "SUMMARY!A1", "Sheet1!B2:C5", "INVENTORY!D1:D10"
+- Double-check that you're targeting the correct tab before making any edits
+
 PRECISION REQUIREMENTS:
 - For "replace" edits: Include 2-3 words of surrounding context for unique matching
 - For "rewrite" edits: Provide the COMPLETE new document content
@@ -824,10 +843,26 @@ For updating formulas:
   "response": "Brief explanation of what you're changing and why",
   "edit": {
     "type": "update_formula",
-    "cell": "C1",
+    "cell": "SUMMARY!C1",
     "formula": "=A1+B1",
     "confidence": "high",
     "reasoning": "Why this formula is needed"
+  }
+}
+
+For updating ranges with formulas:
+{
+  "response": "Brief explanation of what you're changing and why",
+  "edit": {
+    "type": "update_range",
+    "range": "SUMMARY!A1:C10",
+    "values": [
+      ["Metric", "Value", "Formula"],
+      ["Total Revenue", "=SUM(Sheet1!B1:B10)", "=SUM(Sheet1!B1:B10)"],
+      ["Average Sales", "=AVERAGE(Sheet1!C1:C10)", "=AVERAGE(Sheet1!C1:C10)"]
+    ],
+    "confidence": "high",
+    "reasoning": "Why these formulas are needed"
   }
 }
 
