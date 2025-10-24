@@ -6,6 +6,7 @@ import { onCall, onRequest } from 'firebase-functions/v2/https';
 import { google } from 'googleapis';
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { processAIResponse } from './response-processor';
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -187,7 +188,7 @@ async function callGemini(messages: any[], systemPrompt: string) {
 }
 
 // Main AI model router function
-async function callAIModel(model: string, messages: any[], systemPrompt: string) {
+export async function callAIModel(model: string, messages: any[], systemPrompt: string) {
   switch (model) {
     case 'gpt-5-chat-latest':
       return await callOpenAI(messages, systemPrompt);
@@ -1076,78 +1077,38 @@ DO NOT use document operations like replace, insert, delete, or rewrite for spre
       parsedResponse = JSON.parse(cleanResponse);
       console.log('Parsed JSON successfully');
       
-      // CRITICAL: Auto-fix AI responses that use wrong operation types
+      // CRITICAL: Process AI response through multi-layer validation pipeline
       if (parsedResponse.response && parsedResponse.edit) {
-        console.log('Applying response validator to fix AI errors...');
+        console.log('🔄 Processing AI response through validation pipeline...');
         
-        // Fix update_range operations that should be update_formula
-        if (parsedResponse.edit.type === 'update_range' && parsedResponse.edit.values) {
-          const values = parsedResponse.edit.values;
-          
-          // Check if any values look like calculations that should be formulas
-          const shouldBeFormula = values.some((row: any) => 
-            Array.isArray(row) && row.some((cell: any) => 
-              typeof cell === 'string' && (
-                cell.includes('Current Value') ||
-                cell.includes('Revenue Efficiency') ||
-                cell.includes('tied up in inventory') ||
-                cell.includes('assets') ||
-                (cell.includes('Value') && cell.length > 20)
-              )
-            )
+        try {
+          // Process through the multi-layer validation system
+          const processingResult = await processAIResponse(
+            parsedResponse,
+            message,
+            documentContext,
+            selectedModel
           );
           
-          if (shouldBeFormula) {
-            console.log('AUTO-FIXING: Converting update_range to update_formula operations');
-            
-            // Convert to multiple update_formula operations
-            const formulaOperations: any[] = [];
-            
-            values.forEach((row: any[], rowIndex: number) => {
-              row.forEach((cell: any, colIndex: number) => {
-                if (typeof cell === 'string' && cell.length > 10) {
-                  // Convert descriptive text to appropriate formula
-                  let formula = '';
-                  
-                  if (cell.includes('Current Value') || cell.includes('inventory')) {
-                    formula = '=SUM(INVENTORY!C1:C10)'; // Example formula
-                  } else if (cell.includes('Revenue') || cell.includes('efficiency')) {
-                    formula = '=SUM(Sheet1!B1:B10)'; // Example formula
-                  } else if (cell.includes('Average')) {
-                    formula = '=AVERAGE(Sheet1!C1:C10)'; // Example formula
-                  } else if (cell.includes('Count') || cell.includes('Total')) {
-                    formula = '=COUNT(Sheet1!A1:A10)'; // Example formula
-                  } else {
-                    formula = '=SUM(Sheet1!A1:A10)'; // Default formula
-                  }
-                  
-                  const cellRef = `${String.fromCharCode(65 + colIndex)}${rowIndex + 1}`;
-                  formulaOperations.push({
-                    response: `Auto-fixing calculation cell ${cellRef}`,
-                    edit: {
-                      type: 'update_formula',
-                      cell: `${parsedResponse.edit.range?.split('!')[0] || 'SUMMARY'}!${cellRef}`,
-                      formula: formula,
-                      confidence: 'high',
-                      reasoning: 'Automatically converted descriptive text to proper formula'
-                    }
-                  });
-                }
-              });
-            });
-            
-            // Return the first formula operation for now
-            if (formulaOperations.length > 0) {
-              console.log('Returning auto-fixed formula operation');
-              res.json(formulaOperations[0]);
-              return;
-            }
+          console.log('📋 Processing steps:', processingResult.processingSteps);
+          console.log('✅ Was corrected:', processingResult.wasCorrected);
+          
+          if (processingResult.wasCorrected) {
+            console.log('🎉 Response was corrected by validation pipeline');
+            res.json(processingResult.finalResponse);
+            return;
+          } else {
+            console.log('✅ Response passed all validation checks');
+            res.json(processingResult.finalResponse);
+            return;
           }
+        } catch (processingError) {
+          console.error('❌ Processing pipeline error:', processingError);
+          // Fall back to original response if processing fails
+          console.log('🔄 Falling back to original response');
+          res.json(parsedResponse);
+          return;
         }
-        
-        console.log('Returning edit proposal');
-        res.json(parsedResponse);
-        return;
       }
     } catch (e) {
       console.log('JSON parsing failed:', e instanceof Error ? e.message : String(e));
