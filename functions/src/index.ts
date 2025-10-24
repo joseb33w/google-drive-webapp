@@ -1042,11 +1042,11 @@ async function getOAuthClient(uid: string) {
     throw new Error('Refresh token not found. Please sign in with Google again to get a new refresh token.');
   }
   
-  // Create OAuth2 client
+  // Create OAuth2 client for work.triamit.com domain
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    'https://google-drive-webapp-9xjr-cfywzqbha-knight-s-projects-9ddc5f2b.vercel.app'
+    'https://work.triamit.com'
   );
   
   oauth2Client.setCredentials({
@@ -1755,7 +1755,7 @@ export const exchangeOAuthCode = onRequest({
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      redirectUri || 'https://google-drive-webapp-9xjr-cfywzqbha-knight-s-projects-9ddc5f2b.vercel.app'
+      redirectUri || 'https://work.triamit.com'
     );
 
     const { tokens } = await oauth2Client.getToken(code);
